@@ -1,4 +1,4 @@
-Village Events - Combined Fullstack (Backend + Frontend)
+Village Events Management System
 
 
 Backend (FastAPI async SQLAlchemy): ./backend
