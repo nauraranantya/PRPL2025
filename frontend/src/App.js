@@ -1,26 +1,18 @@
-import React, {useState, useEffect} from 'react';
-import { fetchEvents } from './api';
-import EventList from './components/EventList';
-import SearchBar from './components/SearchBar';
-import EventForm from "./components/EventForm";
+// src/App.jsx
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import AdminDashboard from "./pages/AdminDashboard";
+import EventManagement from "./pages/EventManagement";
+import EventCreation from "./pages/EventCreation";
+import EventEdit from "./pages/EventEdit";
 
-export default function App(){
-  const [events, setEvents] = useState([]);
-  const [q, setQ] = useState('');
-
-  async function load(){
-    const res = await fetchEvents({ q, upcoming: true });
-    if(res.success) setEvents(res.data);
-  }
-
-  useEffect(()=>{ load() }, [q]);
-
+export default function App() {
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Daftar Acara Desa</h1>
-      <EventForm />
-      <SearchBar value={q} onChange={setQ} onSubmit={load} />
-      <EventList events={events} />
-    </div>
-  )
+    <Routes>
+      <Route path="/" element={<AdminDashboard />} />
+      <Route path="/kelola-acara" element={<EventManagement />} />
+      <Route path="/buat-acara" element={<EventCreation />} />
+      <Route path="/edit-acara/:id" element={<EventEdit />} />
+    </Routes>
+  );
 }

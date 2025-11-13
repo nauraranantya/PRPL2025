@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "lucide-react": "^0.553.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.9.5",
     "react-scripts": "5.0.1"
   },
   "scripts": {
@@ -22,5 +24,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.18"
   }
 }

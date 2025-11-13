@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { API_BASE } from "../api";
+import { API_BASE } from "../../api";
 
 export default function EventForm({ onEventCreated }) {
   const [form, setForm] = useState({
