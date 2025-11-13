@@ -27,7 +27,7 @@ class EventOut(BaseModel):
     location: Optional[str] = None
     event_date: datetime
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime]
     is_cancelled: bool
     requires_registration: Optional[bool] = None
     recurrence_pattern: Optional[str] = None

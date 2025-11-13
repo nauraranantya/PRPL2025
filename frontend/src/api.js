@@ -1,5 +1,5 @@
 // src/api.js
-export const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:4000/api";
+export const API_BASE = "http://localhost:8000/api";
 
 // Events
 export async function fetchEvents() {
@@ -10,23 +10,38 @@ export async function fetchEvents() {
 export async function createEvent(data) {
   const res = await fetch(`${API_BASE}/events`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.REACT_APP_ADMIN_KEY
+    },
     body: JSON.stringify(data),
   });
   return res.json();
 }
 
-// Announcements
-export async function fetchAnnouncements() {
-  const res = await fetch(`${API_BASE}/announcements`);
+export async function fetchEvent(id) {
+  const res = await fetch(`${API_BASE}/events/${id}`);
   return res.json();
 }
 
-export async function createAnnouncement(data) {
-  const res = await fetch(`${API_BASE}/announcements`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+export async function updateEvent(id, data) {
+  const res = await fetch(`${API_BASE}/events`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.REACT_APP_ADMIN_KEY
+    },
     body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function deleteEvent(id) {
+  const res = await fetch(`${API_BASE}/events/${id}`, {
+    method: "DELETE",
+    headers: {
+      "x-api-key": process.env.REACT_APP_ADMIN_KEY
+    }
   });
   return res.json();
 }
