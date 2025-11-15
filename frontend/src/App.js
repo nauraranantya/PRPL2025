@@ -13,7 +13,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 // Admin – Dashboard & Accounts
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AccountEdit from "./pages/Admin/AccountEdit";
-import VillagersAccount from "./pages/Admin/VillagersAccount";
+import VillagersAccount from "./pages/Admin/AccountVillagers";
 import Attendance from "./pages/Admin/Attendance";
 
 // Admin – Events
@@ -28,9 +28,12 @@ import RoleAssign from "./pages/Admin/Role/RoleAssign";
 import RoleEdit from "./pages/Admin/Role/RoleEdit";
 
 // Admin – Announcements
-import AnnouncementList from "./pages/Admin/Announcement/AnnouncementList";
 import AnnouncementCreate from "./pages/Admin/Announcement/AnnouncementCreate";
 import AnnouncementEdit from "./pages/Admin/Announcement/AnnouncementEdit"; 
+import AnnouncementManagement from "./pages/Admin/Announcement/AnnouncementManagement";
+
+// Villager
+import AnnouncementList from "./pages/Villager/AnnouncementList";
 
 export default function App() {
   return (
@@ -70,13 +73,14 @@ export default function App() {
         <Route path="acara/edit/:id" element={<EventEdit />} />
         
         {/* Announcements */}
-        <Route path="admin/pengumuman" element={<AnnouncementList />} />
-        <Route path="admin/pengumuman/create" element={<AnnouncementCreate />} />
-        <Route path="admin/pengumuman/edit/:id" element={<AnnouncementEdit />} /> 
-
-        {/* Temp page */}
-        <Route path="pengumuman" element={<div>Pengumuman Page</div>} />
+        <Route path="pengumuman" element={<AnnouncementManagement />} />
+        <Route path="pengumuman/tambah" element={<AnnouncementCreate />} />
+        <Route path="pengumuman/edit/:id" element={<AnnouncementEdit />} /> 
+      
       </Route>
+
+      {/* Villager Routes */}
+      <Route path="/warga/pengumuman" element={<AnnouncementList />} />
 
     </Routes>
   );

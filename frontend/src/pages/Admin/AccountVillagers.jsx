@@ -1,22 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AccountCard from "../../components/AccountCard";
+import { fetchUsers } from "../../api";
 import { Trash2 } from "lucide-react";
 
 export default function VillagersAccount() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState([
-    { id: 1, name: "Budi Santoso", phone: "08123456789", email: "budi@email.com" },
-    { id: 2, name: "Dewi Lestari", phone: "08198765432", email: "dewi@email.com" },
-    { id: 3, name: "Agus Pratama", phone: "08234567890", email: "agus@email.com" },
-  ]);
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await fetchUsers();
+        setUsers(data);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      }
+    }
+    loadUsers();
+  }, []);
 
   const filteredUsers = users.filter((u) =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (u.email || u.phone || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const deleteUser = (id) => {
     if (window.confirm("Hapus akun ini?")) {
       setUsers((prev) => prev.filter((u) => u.id !== id));
+      // TODO: call real backend delete when you add it
     }
   };
 
@@ -26,7 +36,7 @@ export default function VillagersAccount() {
 
       <input
         type="text"
-        placeholder="Cari nama warga..."
+        placeholder="Cari nama/email/phone..."
         className="w-full md:w-1/2 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-300"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}

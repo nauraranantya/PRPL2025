@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchAnnouncements } from "../../../api";
+import { fetchAnnouncements } from "../../api";
 import AnnouncementCard from "../../components/announcements/AnnouncementCard";
 
 export default function AnnouncementList() {
@@ -24,7 +24,7 @@ export default function AnnouncementList() {
         <h1 className="text-2xl font-bold">Daftar Pengumuman</h1>
 
         <Link
-          to="/admin/announcements/create"
+          to="/admin/pengumuman/tambah"
           className="px-4 py-2 rounded bg-blue-600 text-white"
         >
           Buat Pengumuman

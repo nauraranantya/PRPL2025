@@ -17,3 +17,45 @@ async def create_announcement(payload: AnnouncementCreate, x_api_key: Optional[s
 async def list_announcements(session: AsyncSession = Depends(get_session)):
     rows = await crud.announcement.list_announcements(session)
     return {'success': True, 'data': [AnnouncementOut.from_orm(r).dict() for r in rows]}
+
+@router.get("/{id}", response_model=dict)
+async def get_announcement(id: UUID, session: AsyncSession = Depends(get_session)):
+    row = await session.get(Announcement, id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    return {"success": True, "data": AnnouncementOut.from_orm(row).dict()}
+
+
+@router.put("/{id}", response_model=dict)
+async def update_announcement(
+    id: UUID,
+    payload: AnnouncementCreate,
+    x_api_key: str = Depends(require_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    row = await session.get(Announcement, id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+
+    row.title = payload.title
+    row.body = payload.body
+    await session.commit()
+    await session.refresh(row)
+
+    return {"success": True, "data": AnnouncementOut.from_orm(row).dict()}
+
+
+@router.delete("/{id}", response_model=dict)
+async def delete_announcement(
+    id: UUID,
+    x_api_key: str = Depends(require_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    row = await session.get(Announcement, id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+
+    await session.delete(row)
+    await session.commit()
+
+    return {"success": True}
