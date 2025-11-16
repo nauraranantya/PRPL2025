@@ -47,7 +47,7 @@ export default function EventCard({ event, onDelete }) {
       {/* Buttons */}
       <div className="flex gap-3 mt-4">
         <Link
-          to={`/admin/acara/${event.id}`}
+          to={`/detail-acara/${event.id}`}
           className="flex items-center gap-2 border px-4 py-2 rounded-md hover:bg-gray-50"
         >
           <Eye size={18} /> Lihat

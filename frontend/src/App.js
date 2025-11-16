@@ -7,6 +7,10 @@ import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import EventList from "./pages/EventList";
+import EventDetail from "./pages/EventDetail";
+
+// Villager
+import VillagerAnnouncement from "./pages/Villager/VillagerAnnouncement";
 
 // Admin Layout
 import AdminLayout from "./components/admin/AdminLayout";
@@ -33,55 +37,53 @@ import AnnouncementCreation from "./pages/Admin/Announcement/AnnouncementCreatio
 import AnnouncementEdit from "./pages/Admin/Announcement/AnnouncementEdit"; 
 import AnnouncementManagement from "./pages/Admin/Announcement/AnnouncementManagement";
 
-// Villager
-import VillagerAnnouncement from "./pages/Villager/VillagerAnnouncement";
-
 export default function App() {
   return (
-    <Routes>
+      <Routes>
 
-      {/* ========= PUBLIC ROUTES ========= */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/daftar-acara" element={<EventList />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-
-      {/* ========= ADMIN ROUTES ========= */}
-      <Route path="/admin" element={<AdminLayout />}>
-
-        {/* Dashboard */}
-        <Route index element={<AdminDashboard />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-
-        {/* Accounts */}
-        <Route path="kelola-akun" element={<VillagersAccount />} />
-        <Route path="akun/edit/:id" element={<AccountEdit />} />
-
-        {/* Roles */}
-        <Route path="peran" element={<RoleManagement />} />
-        <Route path="peran/tambah" element={<RoleCreation />} />
-        <Route path="peran/tugaskan" element={<RoleAssign />} />
-        <Route path="peran/edit/:roleId" element={<RoleEdit />} />
-
-        {/* Attendance */}
-        <Route path="kehadiran" element={<Attendance />} />
-        <Route path="kehadiran/edit/:id" element={<Attendance />} />
-
-        {/* Events */}
-        <Route path="acara" element={<EventManagement />} />
-        <Route path="acara/tambah" element={<EventCreation />} />
-        <Route path="acara/edit/:id" element={<EventEdit />} />
-        
-        {/* Announcements */}
-        <Route path="pengumuman" element={<AnnouncementManagement />} />
-        <Route path="pengumuman/tambah" element={<AnnouncementCreation />} />
-        <Route path="pengumuman/edit/:id" element={<AnnouncementEdit />} /> 
+        {/* ========= PUBLIC ROUTES ========= */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/daftar-acara" element={<EventList />} />
+        <Route path="/detail-acara/:eventId" element={<EventDetail />} />
       
-      </Route>
+        {/* Villager Routes */}
+        <Route path="/pengumuman" element={<VillagerAnnouncement />} />
 
-      {/* Villager Routes */}
-      <Route path="/pengumuman" element={<VillagerAnnouncement />} />
+        {/* ========= ADMIN ROUTES ========= */}
+        <Route path="/admin" element={<AdminLayout />}>
 
-    </Routes>
+          {/* Dashboard */}
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+
+          {/* Accounts */}
+          <Route path="kelola-akun" element={<VillagersAccount />} />
+          <Route path="akun/edit/:id" element={<AccountEdit />} />
+
+          {/* Roles */}
+          <Route path="peran" element={<RoleManagement />} />
+          <Route path="peran/tambah" element={<RoleCreation />} />
+          <Route path="peran/tugaskan" element={<RoleAssign />} />
+          <Route path="peran/edit/:roleId" element={<RoleEdit />} />
+
+          {/* Attendance */}
+          <Route path="kehadiran" element={<Attendance />} />
+          <Route path="kehadiran/edit/:id" element={<Attendance />} />
+
+          {/* Events */}
+          <Route path="acara" element={<EventManagement />} />
+          <Route path="acara/tambah" element={<EventCreation />} />
+          <Route path="acara/edit/:id" element={<EventEdit />} />
+          
+          {/* Announcements */}
+          <Route path="pengumuman" element={<AnnouncementManagement />} />
+          <Route path="pengumuman/tambah" element={<AnnouncementCreation />} />
+          <Route path="pengumuman/edit/:id" element={<AnnouncementEdit />} /> 
+        
+        </Route>
+
+      </Routes>
   );
 }

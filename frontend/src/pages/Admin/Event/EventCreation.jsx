@@ -32,7 +32,7 @@ export default function EventCreation() {
       const res = await createEvent(payload);
 
       if (res.success) {
-        navigate("/acara");
+        navigate("/admin/acara");
       } else {
         setError("Gagal membuat acara");
       }

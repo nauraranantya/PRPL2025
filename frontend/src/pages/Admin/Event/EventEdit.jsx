@@ -58,7 +58,7 @@ export default function EventEdit() {
     try {
       const res = await updateEvent(id, payload);
       if (res.success) {
-        navigate("/acara");
+        navigate("/admin/acara");
       } else {
         alert("Gagal memperbarui acara.");
       }
