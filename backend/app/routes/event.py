@@ -1,20 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
-from app.core.security import require_admin
 from app.database.session import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.event import EventCreate, EventUpdate, EventOut
 from app import crud
+from app.core.deps import require_admin_user
 
 router = APIRouter()
 
 @router.post('', response_model=dict)
-async def create_event(payload: EventCreate, x_api_key: Optional[str] = Depends(require_admin), session: AsyncSession = Depends(get_session)):
+async def create_event(payload: EventCreate, current_user=Depends(require_admin_user), session: AsyncSession = Depends(get_session)):
     ev = await crud.event.create_event(session, payload.title, payload.description, payload.location, payload.event_date, payload.requires_registration, payload.recurrence_pattern)
     return {'success': True, 'data': EventOut.from_orm(ev).dict()}
 
 @router.put('/{event_id}', response_model=dict)
-async def edit_event(event_id: str, payload: EventUpdate, x_api_key: Optional[str] = Depends(require_admin), session: AsyncSession = Depends(get_session)):
+async def edit_event(event_id: str, payload: EventUpdate, current_user=Depends(require_admin_user), session: AsyncSession = Depends(get_session)):
     updates = {}
     if payload.title is not None: updates['title']=payload.title
     if payload.description is not None: updates['description']=payload.description
@@ -27,7 +27,7 @@ async def edit_event(event_id: str, payload: EventUpdate, x_api_key: Optional[st
     return {'success': True, 'data': EventOut.from_orm(ev).dict()}
 
 @router.delete('/{event_id}', response_model=dict)
-async def delete_event(event_id: str, x_api_key: Optional[str] = Depends(require_admin), session: AsyncSession = Depends(get_session)):
+async def delete_event(event_id: str, current_user=Depends(require_admin_user), session: AsyncSession = Depends(get_session)):
     ev = await crud.event.delete_event(session, event_id)
     if not ev:
         raise HTTPException(status_code=404, detail={'code':'EVENT_NOT_FOUND','message':'Event tidak ditemukan'})

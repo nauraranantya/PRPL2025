@@ -10,7 +10,7 @@ export default function VillagersAccount() {
   useEffect(() => {
     async function loadUsers() {
       try {
-        const data = await fetchUsers();
+        const data = await fetchAllUsers();
         setUsers(data);
       } catch (err) {
         console.error("Failed to fetch users:", err);

@@ -1,21 +1,61 @@
-import React, { useState } from "react";
-import AdminNavbar from "./AdminNavbar";
-import Sidebar from "./AdminSidebar";
-import { Outlet } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { fetchMe } from "../../api";
 
 export default function AdminLayout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+  const location = useLocation();
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      <div className="flex-1 flex flex-col">
-        <AdminNavbar toggleSidebar={toggleSidebar} />
-        <main className="flex-1 p-6 overflow-auto">
-          <Outlet />
-        </main>
+  useEffect(() => {
+    async function checkAuth() {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        setAuthorized(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const me = await fetchMe();
+
+        if (me.is_admin === true) {
+          setAuthorized(true);
+        } else {
+          setAuthorized(false);
+        }
+
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        setAuthorized(false);
+      }
+
+      setLoading(false);
+    }
+
+    checkAuth();
+  }, [location]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Mengecek akses...</p>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // No token → send to login
+  if (!authorized) {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      return <Navigate to="/login" replace />;
+    }
+
+    // Logged in but not admin → bounce to home
+    return <Navigate to="/" replace />;
+  }
+
+  // Authorized admin → continue to admin pages
+  return <Outlet />;
 }

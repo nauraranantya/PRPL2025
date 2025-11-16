@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { signupEmail, signupPhone } from "../api";
 
 export default function SignupPage() {
   const [identifier, setIdentifier] = useState(""); // email OR phone
+  const [fullName, setFullName] = useState("");   
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -11,30 +13,41 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
+    if (!identifier || !fullName || !password) {
+      setError("Semua field wajib diisi.");
+      return;
+    }
+
     const isEmail = identifier.includes("@");
 
-    const payload = isEmail
-      ? { email: identifier, password }
-      : { phone: identifier, password };
-
     try {
-      const res = await fetch("http://localhost:8000/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let res;
 
-      const data = await res.json();
+      if (isEmail) {
+        res = await signupEmail({
+          email: identifier,
+          password,
+          full_name: fullName,
+        });
+      } else {
+        res = await signupPhone({
+          phone: identifier,
+          password,
+          full_name: fullName,
+        });
+      }
 
-      if (!res.ok) {
-        setError(data.detail || "Signup failed");
+      if (!res || !res.id) {
+        setError("Signup gagal.");
         return;
       }
 
       alert("Akun berhasil dibuat!");
       navigate("/login");
+
     } catch (err) {
-      setError("Something went wrong");
+      console.error(err);
+      setError("Signup gagal. Periksa kembali data Anda.");
     }
   };
 
@@ -49,6 +62,21 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
 
+          {/* Full Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nama Lengkap
+            </label>
+            <input
+              type="text"
+              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-300"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Email or Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email atau Nomor Telepon
@@ -62,6 +90,7 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password

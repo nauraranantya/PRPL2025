@@ -1,1 +1,1 @@
-from . import event, announcement
+from . import event, announcement, role, user, participation

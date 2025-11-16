@@ -20,8 +20,13 @@ async def get_current_user(
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    user_id = payload["sub"]
-    user = await user_crud.get_by_id(session, user_id)
+    from uuid import UUID
+    try:
+        user_uuid = UUID(payload["sub"])
+    except:
+        raise HTTPException(status_code=401, detail="Invalid user ID in token")
+
+    user = await user_crud.get_by_id(session, user_uuid)
 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")

@@ -5,6 +5,7 @@ from uuid import UUID
 from datetime import datetime
 
 class UserCreateEmail(BaseModel):
+
     email: EmailStr
     password: str
     full_name: str
@@ -12,11 +13,13 @@ class UserCreateEmail(BaseModel):
 class UserCreatePhone(BaseModel):
     phone: str
     password: str
+    full_name: Optional[str] = None
 
 class UserOut(BaseModel):
     id: UUID
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
+    full_name: Optional[str] = None
     is_admin: bool
     is_active: bool
     created_at: datetime
@@ -31,3 +34,7 @@ class Token(BaseModel):
 class TokenPayload(BaseModel):
     sub: str | None = None  # user id
     exp: int | None = None
+
+class LoginRequest(BaseModel):
+    identifier: str
+    password: str

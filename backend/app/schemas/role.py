@@ -6,6 +6,7 @@ from typing import Optional
 class RoleBase(BaseModel):
     role_name: str = Field(..., example="Organizer")
     permissions: Optional[str] = Field(None, example="Can manage event schedule")
+    slots_required: int = 1
 
 class RoleCreate(RoleBase):
     event_id: UUID
