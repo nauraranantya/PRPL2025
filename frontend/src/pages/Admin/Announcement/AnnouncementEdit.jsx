@@ -8,40 +8,74 @@ export default function AnnouncementEdit() {
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnnouncement(id).then((data) => {
-      setTitle(data?.title || "");
-      setBody(data?.body || "");
-    });
+    async function load() {
+      const res = await fetchAnnouncement(id);
+
+      if (res.success) {
+        setTitle(res.data.title);
+        setBody(res.data.body);
+      }
+
+      setLoading(false);
+    }
+
+    load();
   }, [id]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await updateAnnouncement(id, title, body);
-    navigate("/admin/pengumuman");
+
+    const payload = { title, body };
+
+    const res = await updateAnnouncement(id, payload);
+
+    if (res.success) {
+      navigate("/admin/pengumuman");
+    } else {
+      alert("Gagal memperbarui pengumuman");
+    }
   }
 
+  if (loading) return <p>Memuat data...</p>;
+
   return (
-    <div>
-      <h2>Edit Pengumuman</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="min-h-screen bg-gray-100 p-8">
+      <h2 className="text-2xl font-bold mb-4 text-[#043873]">Edit Pengumuman</h2>
 
-        <label>Judul</label>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-md rounded-lg p-6 space-y-4 max-w-xl"
+      >
+        <div>
+          <label className="block font-medium mb-1">Judul</label>
+          <input
+            className="w-full border rounded p-2"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
 
-        <label>Isi</label>
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          required
-        />
+        <div>
+          <label className="block font-medium mb-1">Isi</label>
+          <textarea
+            className="w-full border rounded p-2"
+            rows={5}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            required
+          ></textarea>
+        </div>
 
-        <button type="submit">Update</button>
+        <button
+          type="submit"
+          className="bg-[#043873] text-white px-4 py-2 rounded hover:bg-blue-900 transition"
+        >
+          Update
+        </button>
       </form>
     </div>
   );

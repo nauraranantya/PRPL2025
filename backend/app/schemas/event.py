@@ -9,6 +9,7 @@ class EventCreate(BaseModel):
     location: Optional[str] = Field(None, example="Balai Desa")
     event_date: datetime = Field(..., example="2025-11-12T08:00:00")
     requires_registration: Optional[bool] = Field(False, example=False)
+    slots_available: Optional[int] = Field(None, example=50)
     recurrence_pattern: Optional[str] = Field(None, example="weekly")
 
 class EventUpdate(BaseModel):
@@ -18,6 +19,7 @@ class EventUpdate(BaseModel):
     event_date: Optional[datetime]
     is_cancelled: Optional[bool] = None
     requires_registration: Optional[bool] = None
+    slots_available: Optional[int] = None
     recurrence_pattern: Optional[str] = None
 
 class EventOut(BaseModel):
@@ -30,6 +32,7 @@ class EventOut(BaseModel):
     updated_at: Optional[datetime]
     is_cancelled: bool
     requires_registration: Optional[bool] = None
+    slots_available: Optional[int] = None
     recurrence_pattern: Optional[str] = None
 
     model_config = {"from_attributes": True}
