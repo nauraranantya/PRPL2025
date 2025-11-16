@@ -43,3 +43,6 @@ async def require_admin_user(
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return current_user
+
+async def require_user(current_user=Depends(get_current_user)):
+    return current_user
