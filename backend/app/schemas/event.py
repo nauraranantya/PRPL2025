@@ -16,7 +16,7 @@ class EventUpdate(BaseModel):
     description: Optional[str]
     location: Optional[str]
     event_date: Optional[datetime]
-    is_cancelled: Optional[bool]
+    is_cancelled: Optional[bool] = None
     requires_registration: Optional[bool] = None
     recurrence_pattern: Optional[str] = None
 

@@ -53,7 +53,6 @@ export default function AdminLayout() {
   // No token → send to login
   if (!authorized) {
     const token = localStorage.getItem("access_token");
-
     if (!token) {
       return <Navigate to="/login" replace />;
     }

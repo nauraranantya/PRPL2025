@@ -10,12 +10,10 @@ class RoleBase(BaseModel):
 
 class RoleCreate(RoleBase):
     event_id: UUID
-    participant_id: Optional[UUID] = None
 
 class RoleOut(RoleBase):
     id: UUID
     event_id: UUID
-    participant_id: Optional[UUID]
     created_at: datetime
     updated_at: datetime
 

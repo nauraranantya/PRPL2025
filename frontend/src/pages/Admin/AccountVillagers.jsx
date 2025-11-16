@@ -1,6 +1,12 @@
+<<<<<<< HEAD:frontend/src/pages/Admin/AccountVillagers.jsx
 import React, { useState, useEffect } from "react";
 import AccountCard from "../../components/admin/AccountCard";
 import { fetchUsers } from "../../api";
+=======
+import React, { useState } from "react";
+import AccountCard from "../../components/AccountCard";
+import { fetchAllUsers } from "../../api";
+>>>>>>> features/backend-auth:frontend/src/pages/Admin/VillagersAccount.jsx
 import { Trash2 } from "lucide-react";
 
 export default function VillagersAccount() {

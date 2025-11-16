@@ -19,7 +19,7 @@ if DATABASE_URL:
     config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # Import models Base
-from app.models import event, announcement, participant, role, schedule, event_media
+from app.models import event, announcement, participant, role, schedule, event_media, user
 from app.database.base import Base
 
 target_metadata = Base.metadata

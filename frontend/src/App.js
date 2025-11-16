@@ -39,20 +39,18 @@ import VillagerAnnouncement from "./pages/Villager/VillagerAnnouncement";
 export default function App() {
   return (
     <Routes>
-      
-      {/* Public */}
+
+      {/* ========= PUBLIC ROUTES ========= */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/daftar-acara" element={<EventList />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      {/* Admin Routes */}
+      {/* ========= ADMIN ROUTES ========= */}
       <Route path="/admin" element={<AdminLayout />}>
 
-        {/* Default admin landing */}
-        <Route index element={<AdminDashboard />} />
-
         {/* Dashboard */}
+        <Route index element={<AdminDashboard />} />
         <Route path="dashboard" element={<AdminDashboard />} />
 
         {/* Accounts */}
@@ -67,7 +65,7 @@ export default function App() {
 
         {/* Attendance */}
         <Route path="kehadiran" element={<Attendance />} />
-        <Route path="kehadiran/edit/:id" element={<AccountEdit />} />
+        <Route path="kehadiran/edit/:id" element={<Attendance />} />
 
         {/* Events */}
         <Route path="acara" element={<EventManagement />} />
