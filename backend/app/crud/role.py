@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update
 from app.models.role import Role
+from app.models.participant import Participant
 
 async def create_role(session: AsyncSession, role_data: dict):
     role = Role(**role_data)
@@ -39,3 +40,28 @@ async def update_role(session: AsyncSession, role_id: str, data: dict):
 async def get_role(session: AsyncSession, role_id: str):
     result = await session.execute(select(Role).where(Role.id == role_id))
     return result.scalar_one_or_none()
+
+async def assign_role(session, role_id, user_id, event_id):
+    # Count current assignments
+    count = await session.execute(
+        select(func.count()).select_from(Participant).where(Participant.role_id == role_id)
+    )
+    current_filled = count.scalar()
+
+    # Get role
+    role = await session.get(Role, role_id)
+
+    if current_filled >= role.slots_required:
+        raise HTTPException(400, detail="Penugasan sudah penuh")
+
+    # Assign
+    participant = Participant(
+        event_id=event_id,
+        user_id=user_id,
+        role_id=role_id
+    )
+    session.add(participant)
+    await session.commit()
+    await session.refresh(participant)
+
+    return participant

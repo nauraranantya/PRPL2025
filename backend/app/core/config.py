@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     ADMIN_API_KEY: str = os.getenv('ADMIN_API_KEY', 'dev-key')
     HOST: str = os.getenv('HOST','0.0.0.0')
     PORT: int = int(os.getenv('PORT', 4000))
-    SECRET_KEY: str = "pw96ruT0taOCNg_dNEmQv7omV9VGpTR_qDI2zPKCaYx5yycQIj_NMiJ68UpKLqRq172AAmoHDxlTe_5g8D1XBQ"
+    SECRET_KEY: str = os.getenv('SECRET_KEY')
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 120
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 

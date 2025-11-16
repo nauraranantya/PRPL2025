@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { loginUser, fetchMe } from "../api";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // email or phone
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -12,30 +13,24 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      // Login returns user data directly from backend
+      const loginResponse = await loginUser(identifier, password);
 
-      const data = await res.json();
+      // Fetch full user profile
+      const me = await fetchMe();
 
-      if (!res.ok) {
-        setError(data.message || "Login failed");
-        return;
-      }
-
-      localStorage.setItem("token", data.token);
-      alert("Berhasil Masuk!");
-      navigate("/"); // redirect to homepage
+      if (me.is_admin) navigate("/admin");
+      else navigate("/");
     } catch (err) {
-      setError("Something went wrong");
+      console.error("Login error:", err);
+      setError("Login gagal. Periksa kembali data Anda.");
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-blue-50">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+
         <h2 className="text-2xl font-bold text-center text-[#043873] mb-6">
           Masuk ke Akun Anda
         </h2>
@@ -43,26 +38,27 @@ export default function LoginPage() {
         {error && <p className="text-red-600 text-center mb-3">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email / Nomor Telepon
+              Email atau Nomor Telepon
             </label>
             <input
-              type="email"
-              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-300"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              className="w-full border border-gray-300 rounded-lg p-2"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Kata Sandi
+              Password
             </label>
             <input
               type="password"
-              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-300"
+              className="w-full border border-gray-300 rounded-lg p-2"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -83,6 +79,7 @@ export default function LoginPage() {
             Daftar
           </Link>
         </p>
+
       </div>
     </div>
   );

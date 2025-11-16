@@ -34,3 +34,7 @@ class Token(BaseModel):
 class TokenPayload(BaseModel):
     sub: str | None = None  # user id
     exp: int | None = None
+
+class LoginRequest(BaseModel):
+    identifier: str
+    password: str

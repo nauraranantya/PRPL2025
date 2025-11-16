@@ -1,14 +1,23 @@
 import React, { useState } from "react";
 import AccountCard from "../../components/AccountCard";
+import { fetchAllUsers } from "../../api";
 import { Trash2 } from "lucide-react";
 
 export default function VillagersAccount() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState([
-    { id: 1, name: "Budi Santoso", phone: "08123456789", email: "budi@email.com" },
-    { id: 2, name: "Dewi Lestari", phone: "08198765432", email: "dewi@email.com" },
-    { id: 3, name: "Agus Pratama", phone: "08234567890", email: "agus@email.com" },
-  ]);
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await fetchAllUsers();
+        setUsers(data);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      }
+    }
+    loadUsers();
+  }, []);
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
