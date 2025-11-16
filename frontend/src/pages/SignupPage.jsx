@@ -79,7 +79,7 @@ export default function SignupPage() {
           {/* Email or Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nama Lengkap
+              Alamat Email atau Nomor Telepon
             </label>
             <input
               type="text"

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchAnnouncements } from "../../../api";
-import AnnouncementCard from "../../components/announcements/AnnouncementCard";
+import AnnouncementCard from "../../../components/announcements/AnnouncementCard";
 
 export default function AnnouncementList() {
   const [announcements, setAnnouncements] = useState([]);

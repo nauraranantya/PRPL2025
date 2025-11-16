@@ -30,24 +30,22 @@ import RoleEdit from "./pages/Admin/Role/RoleEdit";
 // Admin – Announcements
 import AnnouncementList from "./pages/Admin/Announcement/AnnouncementList";
 import AnnouncementCreate from "./pages/Admin/Announcement/AnnouncementCreate";
-import AnnouncementEdit from "./pages/Admin/Announcement/AnnouncementEdit"; 
+import AnnouncementEdit from "./pages/Admin/Announcement/AnnouncementEdit";
 
 export default function App() {
   return (
     <Routes>
-      
-      {/* Public */}
+
+      {/* ========= PUBLIC ROUTES ========= */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      {/* Admin Routes */}
+      {/* ========= ADMIN ROUTES ========= */}
       <Route path="/admin" element={<AdminLayout />}>
 
-        {/* Default admin landing */}
-        <Route index element={<AdminDashboard />} />
-
         {/* Dashboard */}
+        <Route index element={<AdminDashboard />} />
         <Route path="dashboard" element={<AdminDashboard />} />
 
         {/* Accounts */}
@@ -62,20 +60,18 @@ export default function App() {
 
         {/* Attendance */}
         <Route path="kehadiran" element={<Attendance />} />
-        <Route path="kehadiran/edit/:id" element={<AccountEdit />} />
+        <Route path="kehadiran/edit/:id" element={<Attendance />} />
 
         {/* Events */}
         <Route path="kelola-acara" element={<EventManagement />} />
         <Route path="acara/tambah" element={<EventCreation />} />
         <Route path="acara/edit/:id" element={<EventEdit />} />
-        
-        {/* Announcements */}
-        <Route path="admin/pengumuman" element={<AnnouncementList />} />
-        <Route path="admin/pengumuman/create" element={<AnnouncementCreate />} />
-        <Route path="admin/pengumuman/edit/:id" element={<AnnouncementEdit />} /> 
 
-        {/* Temp page */}
-        <Route path="pengumuman" element={<div>Pengumuman Page</div>} />
+        {/* Announcements */}
+        <Route path="pengumuman" element={<AnnouncementList />} />
+        <Route path="pengumuman/tambah" element={<AnnouncementCreate />} />
+        <Route path="pengumuman/edit/:id" element={<AnnouncementEdit />} />
+
       </Route>
 
     </Routes>

@@ -58,7 +58,7 @@ export default function EventEdit() {
     try {
       const res = await updateEvent(id, payload);
       if (res.success) {
-        navigate("/kelola-acara");
+        navigate("/admin/kelola-acara");
       } else {
         alert("Gagal memperbarui acara.");
       }
@@ -73,7 +73,7 @@ export default function EventEdit() {
     try {
       const res = await deleteEvent(id);
       if (res.success) {
-        navigate("/kelola-acara");
+        navigate("/admin/kelola-acara");
       } else {
         alert("Gagal menghapus acara.");
       }
@@ -89,10 +89,10 @@ export default function EventEdit() {
       <div className="min-h-screen bg-gray-100 p-8">
         <div className="mb-6">
           <Link
-            to="admin/kelola-acara"
+            to="/admin/kelola-acara"
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
           >
-            ← Back to Event Management
+            ← Kembali ke Kelola Acara
           </Link>
         </div>
 

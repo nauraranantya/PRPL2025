@@ -3,6 +3,7 @@ from typing import Optional
 from app.core.deps import require_admin_user
 from app.database.session import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.announcement import Announcement
 from app.schemas.announcement import AnnouncementCreate, AnnouncementOut
 from app import crud
 from uuid import UUID
