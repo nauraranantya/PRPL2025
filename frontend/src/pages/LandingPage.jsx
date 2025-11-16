@@ -39,7 +39,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
       <Hero images={heroImages} />
 
       {/* Upcoming Events */}

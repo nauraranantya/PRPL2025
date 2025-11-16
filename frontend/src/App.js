@@ -1,6 +1,8 @@
 // src/App.jsx
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React, {useState, useEffect} from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+
+import Navbar from "./components/Navbar";
 
 // Public pages
 import LandingPage from "./pages/LandingPage";
@@ -38,12 +40,27 @@ import AnnouncementEdit from "./pages/Admin/Announcement/AnnouncementEdit";
 import AnnouncementManagement from "./pages/Admin/Announcement/AnnouncementManagement";
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const location = useLocation();
+
+  // Load saved user
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
+
+  // Check if page is inside admin area
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   return (
+      <>
+      {!isAdminRoute && <Navbar user={user} setUser={setUser} />}
+
       <Routes>
 
         {/* ========= PUBLIC ROUTES ========= */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage setUser={setUser}/>} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/daftar-acara" element={<EventList />} />
         <Route path="/detail-acara/:eventId" element={<EventDetail />} />
@@ -85,5 +102,7 @@ export default function App() {
         </Route>
 
       </Routes>
+
+      </>
   );
 }

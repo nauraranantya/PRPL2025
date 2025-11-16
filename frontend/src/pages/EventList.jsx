@@ -43,7 +43,6 @@ export default function EventList() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
 
       <div className="px-8 md:px-20 mt-8">
         <h1 className="text-3xl font-bold text-[#043873]">Daftar Acara</h1>

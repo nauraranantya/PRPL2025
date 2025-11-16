@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser, fetchMe } from "../api";
 
-export default function LoginPage() {
+export default function LoginPage({setUser}) {
   const [identifier, setIdentifier] = useState(""); // email or phone
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,8 +19,13 @@ export default function LoginPage() {
       // Fetch full user profile
       const me = await fetchMe();
 
+      localStorage.setItem("user", JSON.stringify(me)); // me is the profile data
+      setUser(me)
+      navigate("/");
+
       if (me.is_admin) navigate("/admin");
       else navigate("/");
+
     } catch (err) {
       console.error("Login error:", err);
       setError("Login gagal. Periksa kembali data Anda.");
