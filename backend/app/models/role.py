@@ -19,4 +19,4 @@ class Role(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     event = relationship("Event", back_populates="roles")
-    participants = relationship("Participant", back_populates="role")
+    participants = relationship("Participant", back_populates="role", cascade="all, delete")

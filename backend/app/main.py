@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database.session import init_db
-from app.routes import event, announcement, role, auth, recurrence
+from app.routes import event, announcement, role, auth, recurrence, participation, user
 from fastapi.middleware.cors import CORSMiddleware
 from app.services.recurrence_engine import generate_recurring_events
 import asyncio
@@ -34,6 +34,10 @@ app.include_router(announcement.router, prefix='/api/announcements', tags=['anno
 app.include_router(role.router, prefix="/api/roles", tags=["roles"])
 
 app.include_router(recurrence.router, prefix="/api/recurrences", tags=["recurrences"])
+
+app.include_router(participation.router, prefix="/api/participants", tags=["participants"])
+
+app.include_router(user.router, prefix="/api/users", tags=["users"])
 
 
 @app.get('/')

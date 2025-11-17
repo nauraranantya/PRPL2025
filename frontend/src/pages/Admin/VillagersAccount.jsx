@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AccountCard from "../../components/AccountCard";
 import { fetchAllUsers } from "../../api";
 import { Trash2 } from "lucide-react";
@@ -10,8 +10,8 @@ export default function VillagersAccount() {
   useEffect(() => {
     async function loadUsers() {
       try {
-        const data = await fetchAllUsers();
-        setUsers(data);
+        const res = await fetchAllUsers();
+        if (res.success) setUsers(res.data);
       } catch (err) {
         console.error("Failed to fetch users:", err);
       }
@@ -20,7 +20,7 @@ export default function VillagersAccount() {
   }, []);
 
   const filteredUsers = users.filter((u) =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (u.full_name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const deleteUser = (id) => {

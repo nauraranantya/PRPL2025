@@ -5,7 +5,7 @@ from app.schemas.participant import ParticipantCreate, ParticipantOut
 from app.core.deps import require_admin_user
 from app import crud
 
-router = APIRouter(prefix="/api/participants", tags=["Participants"])
+router = APIRouter()
 
 @router.post("", response_model=ParticipantOut)
 async def register_participant(
