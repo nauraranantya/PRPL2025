@@ -56,25 +56,21 @@ const RoleManagement = () => {
   });
 
   // REMOVE ROLE ASSIGNMENT
-  const removeAssignment = async (roleId) => {
-    if (!window.confirm("Hapus penugasan dari peran ini?")) return;
+const removeAssignment = async (participantId) => {
+  if (!window.confirm("Hapus penugasan dari peran ini?")) return;
 
-    try {
-      await axios.put(`${API_BASE}/role-assign/unassign/${roleId}`, null, {
-        headers: {
-          "x-api-key": process.env.REACT_APP_ADMIN_KEY,
-        },
-      });
+  try {
+    await axios.put(`${API_BASE}/participants/${participantId}/unassign-role`);
 
-      setRoles((prev) =>
-        prev.map((r) =>
-          r.id === roleId ? { ...r, assigned_to: null } : r
-        )
-      );
-    } catch (err) {
-      console.error("Failed to unassign", err);
-    }
-  };
+    setRoles((prev) =>
+      prev.map((r) =>
+        r.id === participantId ? { ...r, assigned_to: null } : r
+      )
+    );
+  } catch (err) {
+    console.error("Failed to unassign", err);
+  }
+};
 
   return (
     <div className="p-6 space-y-6">
@@ -178,7 +174,7 @@ const RoleManagement = () => {
 
               <button
                 className="w-1/4 bg-red-600 text-white py-2 rounded flex justify-center"
-                onClick={() => removeAssignment(role.id)}
+                onClick={() => removeAssignment(role.assigned_participant_id)}
               >
                 <FiTrash2 />
               </button>

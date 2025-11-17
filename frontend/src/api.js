@@ -151,18 +151,33 @@ export async function deleteEvent(id) {
 /* ---------------------------------------------------
    PARTICIPANTS
 --------------------------------------------------- */
+// Get participants for an event
 export async function fetchEventParticipants(eventId) {
-  const res = await api.get(`/events/${eventId}/participants`);
+  const res = await api.get(`/participants/${eventId}`);
   return res.data;
 }
 
-export async function registerParticipant(eventId, data) {
-  const res = await api.post(`/events/${eventId}/participants`, data);
+// Register participant
+export async function registerParticipant(data) {
+  const res = await api.post(`/participants`, data);
   return res.data;
 }
 
+// Delete participant
 export async function deleteParticipant(id) {
   const res = await api.delete(`/participants/${id}`);
+  return res.data;
+}
+
+// Assign role to participant
+export async function assignRole(participantId, roleId) {
+  const res = await api.put(`/participants/${participantId}/assign-role/${roleId}`);
+  return res.data;
+}
+
+// Unassign role
+export async function unassignRole(participantId) {
+  const res = await api.put(`/participants/${participantId}/unassign-role`);
   return res.data;
 }
 
@@ -186,11 +201,6 @@ export async function createRole(data) {
 
 export async function deleteRole(roleId) {
   const res = await api.delete(`/roles/${roleId}`);
-  return res.data;
-}
-
-export async function assignRole(data) {
-  const res = await api.post("/role-assign/assign", data);
   return res.data;
 }
 

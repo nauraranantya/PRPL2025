@@ -28,3 +28,12 @@ async def delete_participant(session, participant_id):
     await session.delete(p)
     await session.commit()
     return True
+
+async def unassign_role(session, participant_id):
+    p = await session.get(Participant, participant_id)
+    if not p:
+        return None
+    p.role_id = None
+    await session.commit()
+    await session.refresh(p)
+    return p
