@@ -1,5 +1,6 @@
 from app.models.participant import Participant
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 async def create_participant(session, data):
     participant = Participant(**data)
@@ -20,6 +21,18 @@ async def assign_role(session, participant_id, role_id):
     await session.commit()
     await session.refresh(p)
     return p
+
+async def unassign_role(session: AsyncSession, participant_id: str):
+    from app.models.participant import Participant
+
+    row = await session.get(Participant, participant_id)
+    if not row:
+        return None
+
+    row.role_id = None
+    await session.commit()
+    await session.refresh(row)
+    return row
 
 async def delete_participant(session, participant_id):
     p = await session.get(Participant, participant_id)

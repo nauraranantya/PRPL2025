@@ -52,3 +52,10 @@ async def delete_recurrence(
     if not ok:
         raise HTTPException(404, "Recurrence not found")
     return {"success": True}
+
+''' testing endpoint to generate recurring events
+@router.post("/test-generate")
+async def test_generate(session: AsyncSession = Depends(get_session)):
+    from app.services.recurrence_engine import generate_recurring_events
+    await generate_recurring_events()
+    return {"success": True, "message": "Recurring events generated."} '''
