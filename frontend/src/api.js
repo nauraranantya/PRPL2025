@@ -210,7 +210,9 @@ export async function fetchRoles() {
 }
 
 export async function fetchEventRoles(eventId) {
-  const res = await api.get(`/roles/${eventId}`);
+  const res = await api.get(`/roles`, {
+    params: { event_id: eventId }
+  });
   return res.data;
 }
 

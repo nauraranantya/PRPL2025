@@ -1,145 +1,123 @@
-// Kelola Peran
+// Kelola Peran (Fixed - Final Version)
 import React, { useEffect, useState } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import {
+  fetchEvents,
+  fetchEventRoles,
+  fetchEventParticipants,
+  unassignRole,
+} from "../../../api";
 
-const API_BASE = "http://localhost:8000/api";
-
-const RoleManagement = () => {
+export default function RoleManagement() {
   const navigate = useNavigate();
 
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("");
   const [roles, setRoles] = useState([]);
-  const [participants, setParticipants] = useState([]); // may remain []
+  const [participants, setParticipants] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loadingParticipantsError, setLoadingParticipantsError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Helper: get auth headers (access token + admin key)
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("access_token");
-    const headers = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    if (process.env.REACT_APP_ADMIN_KEY)
-      headers["x-api-key"] = process.env.REACT_APP_ADMIN_KEY;
-    return headers;
-  };
-
-  // FETCH EVENTS
+  // ---------------------------------------------
+  // Load events on mount
+  // ---------------------------------------------
   useEffect(() => {
-    const fetchEvents = async () => {
+    async function load() {
       try {
-        const res = await axios.get(`${API_BASE}/events`);
-        // backend returns { success: True, data: [...] } -> use res.data.data if exists
-        setEvents(res.data?.data ?? res.data ?? []);
+        const res = await fetchEvents();
+        setEvents(res.data ?? []);
       } catch (err) {
         console.error("Failed to load events", err);
-        setEvents([]);
       }
-    };
-    fetchEvents();
+    }
+    load();
   }, []);
 
-// When an event is selected, fetch roles AND try to fetch participants (safe)
-// When an event is selected, fetch roles AND participants safely
-// When an event is selected, fetch roles AND participants safely
-useEffect(() => {
-  if (!selectedEvent) {
-    setRoles([]);
-    setParticipants([]);
-    setLoadingParticipantsError(null);
-    return;
-  }
-
-  const loadData = async () => {
-    let backendRoles = [];
-    let participantsData = [];
-    let participantError = null;
-
-    try {
-      // 1) fetch roles from correct endpoint
-      const rolesRes = await axios.get(`${API_BASE}/roles/event/${selectedEvent}`, {
-        headers: getAuthHeaders(),
-      });
-      backendRoles = rolesRes.data ?? rolesRes.data?.data ?? [];
-
-      // 2) fetch participants
-      try {
-        const pRes = await axios.get(`${API_BASE}/participants/${selectedEvent}`, {
-          headers: getAuthHeaders(),
-        });
-        participantsData = pRes.data ?? pRes.data?.data ?? [];
-      } catch (err1) {
-        try {
-          const pRes2 = await axios.get(`${API_BASE}/events/${selectedEvent}/participants`, {
-            headers: getAuthHeaders(),
-          });
-          participantsData = pRes2.data ?? pRes2.data?.data ?? [];
-        } catch (err2) {
-          console.warn("Failed to load participants from both endpoints:", err1, err2);
-          participantsData = [];
-          participantError = err2 || err1;
-        }
-      }
-
-      // set state
-      setRoles(Array.isArray(backendRoles) ? backendRoles : []);
-      setParticipants(Array.isArray(participantsData) ? participantsData : []);
-      setLoadingParticipantsError(participantError);
-
-    } catch (err) {
-      console.error("Failed to load roles or participants", err);
+  // ---------------------------------------------
+  // Load roles + participants when event changes
+  // ---------------------------------------------
+  useEffect(() => {
+    if (!selectedEvent) {
       setRoles([]);
       setParticipants([]);
-      setLoadingParticipantsError(err);
+      return;
     }
-  };
 
-  loadData();
-}, [selectedEvent]);
+    async function loadEventData() {
+      setLoading(true);
+      
+      try {
+        // ---- Load Roles ----
+        const rolesRes = await fetchEventRoles(selectedEvent);
+        console.log("Roles Response:", rolesRes);
+        
+        // The API returns array directly, not wrapped in .data
+        const backendRoles = Array.isArray(rolesRes) 
+          ? rolesRes 
+          : Array.isArray(rolesRes.data) 
+          ? rolesRes.data 
+          : [];
+        
+        console.log("Backend Roles:", backendRoles);
+        setRoles(backendRoles);
 
-  // Merge participants -> role for display (safe even if participants = [])
-  const mergedRoles = roles.map((role) => {
-    // find a participant assigned to this role (participant.role_id should equal role.id)
-    const assigned = participants.find((p) => {
-      // participants from different backends might use role_id or roleId naming — tolerate both
-      return (p.role_id ?? p.roleId ?? p.roleId) === role.id;
-    });
-
-    // assigned_to: try to show a human-friendly name if available, otherwise show user_id
-    let assignedTo = null;
-    if (assigned) {
-      // participant might include a populated user object or a user_id
-      if (assigned.user && (assigned.user.full_name || assigned.user.email)) {
-        assignedTo = assigned.user.full_name ?? assigned.user.email;
-      } else if (assigned.user_full_name) {
-        assignedTo = assigned.user_full_name;
-      } else {
-        assignedTo = assigned.user_id ?? assigned.userId ?? null;
+        // ---- Load Participants ----
+        const pRes = await fetchEventParticipants(selectedEvent);
+        console.log("Participants Response:", pRes);
+        
+        // Same here - array returned directly
+        const backendParticipants = Array.isArray(pRes) 
+          ? pRes 
+          : Array.isArray(pRes.data) 
+          ? pRes.data 
+          : [];
+        
+        console.log("Backend Participants:", backendParticipants);
+        setParticipants(backendParticipants);
+        
+      } catch (err) {
+        console.error("Failed to load roles or participants", err);
+        setRoles([]);
+        setParticipants([]);
+      } finally {
+        setLoading(false);
       }
     }
+
+    loadEventData();
+  }, [selectedEvent]);
+
+  // ---------------------------------------------
+  // Merge roles with assigned participant
+  // ---------------------------------------------
+  const merged = roles.map((role) => {
+    const assigned = participants.find(
+      (p) => p.role_id === role.id
+    );
 
     return {
       ...role,
-      assigned_to: assignedTo,
-      assigned_participant_id: assigned ? assigned.id : null,
+      assigned_to: assigned?.user?.full_name || assigned?.user_id || null,
+      assigned_participant_id: assigned?.id || null,
     };
   });
 
-  // Counters
-  const totalRoles = mergedRoles.length;
-  const filledRoles = mergedRoles.filter((r) => r.assigned_to).length;
+  const filteredRoles = merged.filter((role) =>
+    (role.assigned_to ?? "")
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  // Counts
+  const totalRoles = merged.length;
+  const filledRoles = merged.filter((r) => r.assigned_to).length;
   const emptyRoles = totalRoles - filledRoles;
 
-  // Search filter
-  const filteredRoles = mergedRoles.filter((role) => {
-    if (!searchTerm.trim()) return true;
-    const target = (role.assigned_to ?? "").toString().toLowerCase();
-    return target.includes(searchTerm.toLowerCase());
-  });
-
-  // REMOVE ROLE ASSIGNMENT
+  // ---------------------------------------------
+  // Unassign Role
+  // ---------------------------------------------
   const removeAssignment = async (participantId) => {
     if (!participantId) {
       alert("Peran ini belum memiliki penugasan.");
@@ -149,51 +127,31 @@ useEffect(() => {
     if (!window.confirm("Hapus penugasan dari peran ini?")) return;
 
     try {
-      await axios.put(
-        `${API_BASE}/participants/${participantId}/unassign-role`,
-        null,
-        { headers: getAuthHeaders() }
-      );
+      await unassignRole(participantId);
 
-      // successful — refresh participants list for this event (best practice)
-      // attempt same endpoints as before (safe/forgiving)
-      try {
-        const pRes = await axios.get(`${API_BASE}/participants/${selectedEvent}`, {
-          headers: getAuthHeaders(),
-        });
-        setParticipants(pRes.data ?? pRes.data?.data ?? []);
-      } catch (e1) {
-        try {
-          const pRes2 = await axios.get(`${API_BASE}/events/${selectedEvent}/participants`, {
-            headers: getAuthHeaders(),
-          });
-          setParticipants(pRes2.data ?? pRes2.data?.data ?? []);
-        } catch (e2) {
-          // can't refresh participants; at least locally update mergedRoles by removing assignment
-          setParticipants((prev) => prev.filter((p) => p.id !== participantId));
-          console.warn("Could not refresh participants after unassign:", e1, e2);
-        }
-      }
+      // Refresh participant state
+      const pRes = await fetchEventParticipants(selectedEvent);
+      const backendParticipants = Array.isArray(pRes) 
+        ? pRes 
+        : Array.isArray(pRes.data) 
+        ? pRes.data 
+        : [];
+      setParticipants(backendParticipants);
     } catch (err) {
-      console.error("Failed to unassign", err);
-      // If CORS or network error, give a helpful message
-      if (!err.response) {
-        alert(
-          "Network/CORS error while trying to unassign. Check backend is running and CORS settings."
-        );
-      } else if (err.response.status === 401 || err.response.status === 403) {
-        alert("Unauthorized — please login as admin.");
-      } else {
-        alert("Gagal menghapus penugasan. Cek console untuk detail.");
-      }
+      console.error(err);
+      alert("Gagal menghapus penugasan.");
     }
   };
 
+  // ---------------------------------------------
+  // UI
+  // ---------------------------------------------
   return (
     <div className="p-6 space-y-6">
+
       <h1 className="text-2xl font-bold">Kelola Peran</h1>
 
-      {/* Event selector */}
+      {/* Event Selector */}
       <div className="flex items-center gap-4">
         <select
           className="border p-2 rounded w-60"
@@ -201,110 +159,131 @@ useEffect(() => {
           onChange={(e) => setSelectedEvent(e.target.value)}
         >
           <option value="">Pilih Acara</option>
-          {events.map((event) => (
-            <option key={event.id} value={event.id}>
-              {event.title}
+          {events.map((ev) => (
+            <option key={ev.id} value={ev.id}>
+              {ev.title}
             </option>
           ))}
         </select>
 
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           onClick={() => navigate("/admin/peran/tambah")}
         >
           + Peran Baru
         </button>
       </div>
 
-      {/* Counters */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="p-4 border rounded shadow text-center">
-          <p className="text-gray-600">Total Peran</p>
-          <p className="text-2xl font-bold">{totalRoles}</p>
-        </div>
-
-        <div className="p-4 border rounded shadow text-center bg-green-100">
-          <p className="text-gray-600">Peran Terisi</p>
-          <p className="text-2xl font-bold text-green-700">{filledRoles}</p>
-        </div>
-
-        <div className="p-4 border rounded shadow text-center bg-red-100">
-          <p className="text-gray-600">Peran Kosong</p>
-          <p className="text-2xl font-bold text-red-700">{emptyRoles}</p>
-        </div>
-      </div>
-
-      {/* If we had trouble loading participants, show a subtle hint */}
-      {loadingParticipantsError && (
-        <div className="text-sm text-yellow-700 bg-yellow-100 p-2 rounded">
-          Tidak bisa memuat data peserta (participants). Peran akan tampil tanpa informasi penugasan.
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Memuat data...</p>
         </div>
       )}
 
-      {/* Search */}
-      <input
-        type="text"
-        className="border p-2 w-full rounded"
-        placeholder="Cari nama anggota..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      {/* Roles */}
-      <div className="space-y-4">
-        {filteredRoles.map((role) => (
-          <div key={role.id} className="border rounded p-4 shadow bg-white">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-lg font-semibold">{role.role_name}</h2>
-                <p className="text-gray-600">{role.permissions}</p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button onClick={() => navigate(`/admin/peran/edit/${role.id}`)}>
-                  <FiEdit2 className="text-blue-600 text-xl" />
-                </button>
-
-                <span className="px-3 py-1 bg-gray-200 rounded text-sm font-semibold">
-                  {role.assigned_to ? "1/1" : "0/1"}
-                </span>
-              </div>
+      {/* Show content only when event is selected and not loading */}
+      {selectedEvent && !loading && (
+        <>
+          {/* Counters */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="p-4 border rounded text-center shadow">
+              <p className="text-gray-600">Total Peran</p>
+              <p className="text-2xl font-bold">{totalRoles}</p>
             </div>
-
-            <hr className="my-3" />
-
-            <p className="text-gray-500 text-sm">Ditugaskan kepada:</p>
-
-            {role.assigned_to ? (
-              <p className="font-medium mt-1">{role.assigned_to}</p>
-            ) : (
-              <p className="text-gray-400 italic">Belum ditugaskan</p>
-            )}
-
-            <div className="flex gap-3 mt-4">
-              <button
-                className="w-3/4 bg-yellow-500 text-white py-2 rounded"
-                onClick={() =>
-                  navigate(`/admin/peran/tugaskan/${role.id}`, {
-                    state: { eventId: selectedEvent },
-                  })
-                }
-              >
-                Ubah Penugasan
-              </button>
-
-              <button
-                className="w-1/4 bg-red-600 text-white py-2 rounded flex justify-center"
-                onClick={() => removeAssignment(role.assigned_participant_id)}
-              >
-                <FiTrash2 />
-              </button>
+            <div className="p-4 border rounded text-center bg-green-100 shadow">
+              <p className="text-gray-600">Terisi</p>
+              <p className="text-2xl font-bold text-green-700">{filledRoles}</p>
+            </div>
+            <div className="p-4 border rounded text-center bg-red-100 shadow">
+              <p className="text-gray-600">Kosong</p>
+              <p className="text-2xl font-bold text-red-700">{emptyRoles}</p>
             </div>
           </div>
-        ))}
-      </div>
+
+          {/* Search */}
+          <input
+            type="text"
+            className="border p-2 rounded w-full"
+            placeholder="Cari nama…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          {/* Role List */}
+          {filteredRoles.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              {merged.length === 0 
+                ? "Belum ada peran untuk acara ini" 
+                : "Tidak ada hasil pencarian"}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredRoles.map((role) => (
+                <div key={role.id} className="p-4 border rounded bg-white shadow">
+
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h2 className="text-lg font-semibold">{role.role_name}</h2>
+                      <p className="text-gray-600">{role.permissions}</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => navigate(`/admin/peran/edit/${role.id}`)}
+                        className="hover:bg-gray-100 p-2 rounded"
+                      >
+                        <FiEdit2 className="text-blue-600 text-xl" />
+                      </button>
+                      <span className="px-3 py-1 bg-gray-200 rounded text-sm">
+                        {role.assigned_to ? "1/1" : "0/1"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <hr className="my-3" />
+
+                  <p className="text-gray-500 text-sm">Ditugaskan kepada:</p>
+
+                  {role.assigned_to ? (
+                    <p className="font-medium mt-1">{role.assigned_to}</p>
+                  ) : (
+                    <p className="text-gray-400 italic">Belum ditugaskan</p>
+                  )}
+
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      className="w-3/4 bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
+                      onClick={() =>
+                        navigate(`/admin/peran/tugaskan/${role.id}`, {
+                          state: { eventId: selectedEvent },
+                        })
+                      }
+                    >
+                      Ubah Penugasan
+                    </button>
+
+                    <button
+                      className="w-1/4 bg-red-600 text-white py-2 rounded flex justify-center items-center hover:bg-red-700"
+                      onClick={() => removeAssignment(role.assigned_participant_id)}
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* No event selected message */}
+      {!selectedEvent && !loading && (
+        <div className="text-center py-8 text-gray-500">
+          Pilih acara untuk melihat peran
+        </div>
+      )}
+
     </div>
   );
-};
-
-export default RoleManagement;
+}

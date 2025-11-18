@@ -3,6 +3,8 @@ from sqlalchemy.future import select
 from sqlalchemy import update
 from app.models.role import Role
 from app.models.participant import Participant
+from fastapi import HTTPException
+from sqlalchemy import func
 
 async def create_role(session: AsyncSession, role_data: dict):
     role = Role(**role_data)
@@ -24,18 +26,18 @@ async def delete_role(session: AsyncSession, role_id: str):
     await session.commit()
     return role
 
-async def update_role(session: AsyncSession, role_id: str, data: dict):
-    query = (
-        update(Role)
-        .where(Role.id == role_id)
-        .values(**data)
-        .returning(Role)
-    )
-    result = await session.execute(query)
-    updated = result.fetchone()
+async def update_role(session, role_id, data):
+    role = await session.get(Role, role_id)
+    if not role:
+        return None
+
+    for k, v in data.items():
+        setattr(role, k, v)
 
     await session.commit()
-    return updated
+    await session.refresh(role)  
+
+    return role
 
 async def get_role(session: AsyncSession, role_id: str):
     result = await session.execute(select(Role).where(Role.id == role_id))
@@ -65,3 +67,8 @@ async def assign_role(session, role_id, user_id, event_id):
     await session.refresh(participant)
 
     return participant
+
+async def list_all_roles(session: AsyncSession):
+    from app.models.role import Role
+    result = await session.execute(select(Role))
+    return result.scalars().all()
