@@ -1,13 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
+from uuid import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.schemas.recurrence import RecurrenceCreate, RecurrenceUpdate, RecurrenceOut
 from app.crud import recurrence as crud
 from app.database.session import get_session
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
 from app.core.deps import require_admin_user
+
 
 router = APIRouter()
 
+
+# ------------------------------------------------------
+# CREATE
+# ------------------------------------------------------
 @router.post("", response_model=dict)
 async def create_recurrence(
     payload: RecurrenceCreate,
@@ -17,18 +24,44 @@ async def create_recurrence(
     rec = await crud.create_recurrence(session, payload.model_dump())
     return {"success": True, "data": RecurrenceOut.from_orm(rec)}
 
+
+# ------------------------------------------------------
+# GET BY ID
+# ------------------------------------------------------
 @router.get("/{id}", response_model=dict)
-async def get_recurrence(id: UUID, session: AsyncSession = Depends(get_session)):
+async def get_recurrence(
+    id: UUID,
+    session: AsyncSession = Depends(get_session)
+):
     rec = await crud.get(session, id)
     if not rec:
         raise HTTPException(404, "Recurrence not found")
     return {"success": True, "data": RecurrenceOut.from_orm(rec)}
 
+
+# ------------------------------------------------------
+# LIST (with optional event_id= filter)
+# ------------------------------------------------------
 @router.get("", response_model=dict)
-async def list_recurrences(session: AsyncSession = Depends(get_session)):
+async def list_recurrences(
+    event_id: Optional[UUID] = Query(None),
+    session: AsyncSession = Depends(get_session)
+):
+    if event_id:
+        rec = await crud.get_by_event(session, str(event_id))
+        return {
+            "success": True,
+            "data": [] if not rec else [RecurrenceOut.from_orm(rec)]
+        }
+
+    # Otherwise return ALL recurrences
     rows = await crud.list_recurrences(session)
     return {"success": True, "data": [RecurrenceOut.from_orm(r) for r in rows]}
 
+
+# ------------------------------------------------------
+# UPDATE
+# ------------------------------------------------------
 @router.put("/{id}", response_model=dict)
 async def update_recurrence(
     id: UUID,
@@ -38,10 +71,16 @@ async def update_recurrence(
 ):
     updates = {k: v for k, v in payload.model_dump().items() if v is not None}
     rec = await crud.update_recurrence(session, id, updates)
+
     if not rec:
         raise HTTPException(404, "Recurrence not found")
+
     return {"success": True, "data": RecurrenceOut.from_orm(rec)}
 
+
+# ------------------------------------------------------
+# DELETE
+# ------------------------------------------------------
 @router.delete("/{id}", response_model=dict)
 async def delete_recurrence(
     id: UUID,
@@ -52,10 +91,3 @@ async def delete_recurrence(
     if not ok:
         raise HTTPException(404, "Recurrence not found")
     return {"success": True}
-
-''' testing endpoint to generate recurring events
-@router.post("/test-generate")
-async def test_generate(session: AsyncSession = Depends(get_session)):
-    from app.services.recurrence_engine import generate_recurring_events
-    await generate_recurring_events()
-    return {"success": True, "message": "Recurring events generated."} '''

@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database.session import init_db
-from app.routes import event, announcement, role, auth, recurrence, participation, user
+from app.routes import event, announcement, role, auth, recurrence, participation, user, media
 from app.services.recurrence_engine import generate_recurring_events
 
 # --- Configuration via env ---
@@ -120,6 +120,7 @@ app.include_router(role.router, prefix="/api/roles", tags=["roles"])
 app.include_router(recurrence.router, prefix="/api/recurrences", tags=["recurrences"])
 app.include_router(participation.router, prefix="/api/participants", tags=["participants"])
 app.include_router(user.router, prefix="/api/users", tags=["users"])
+app.include_router(media.router, prefix="/api/media", tags=["media"])
 
 # Simple root + health-check
 @app.get("/")
