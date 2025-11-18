@@ -1,52 +1,65 @@
-from app.models.participant import Participant
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.participant import Participant
 
-async def create_participant(session, data):
+
+# ---------------------------------------------------------
+# CREATE
+# ---------------------------------------------------------
+async def create_participant(session: AsyncSession, data):
     participant = Participant(**data)
     session.add(participant)
     await session.commit()
     await session.refresh(participant)
     return participant
 
-async def list_participants(session, event_id):
-    q = await session.execute(select(Participant).where(Participant.event_id == event_id))
+
+# ---------------------------------------------------------
+# LIST BY EVENT
+# ---------------------------------------------------------
+async def list_participants(session: AsyncSession, event_id: str):
+    q = await session.execute(
+        select(Participant).where(Participant.event_id == event_id)
+    )
     return q.scalars().all()
 
-async def assign_role(session, participant_id, role_id):
+
+# ---------------------------------------------------------
+# ASSIGN ROLE
+# ---------------------------------------------------------
+async def assign_role(session: AsyncSession, participant_id: str, role_id: str):
     p = await session.get(Participant, participant_id)
     if not p:
         return None
+
     p.role_id = role_id
     await session.commit()
     await session.refresh(p)
     return p
 
+
+# ---------------------------------------------------------
+# UNASSIGN ROLE (clean single version)
+# ---------------------------------------------------------
 async def unassign_role(session: AsyncSession, participant_id: str):
-    from app.models.participant import Participant
-
-    row = await session.get(Participant, participant_id)
-    if not row:
-        return None
-
-    row.role_id = None
-    await session.commit()
-    await session.refresh(row)
-    return row
-
-async def delete_participant(session, participant_id):
     p = await session.get(Participant, participant_id)
     if not p:
         return None
-    await session.delete(p)
-    await session.commit()
-    return True
 
-async def unassign_role(session, participant_id):
-    p = await session.get(Participant, participant_id)
-    if not p:
-        return None
     p.role_id = None
     await session.commit()
     await session.refresh(p)
     return p
+
+
+# ---------------------------------------------------------
+# DELETE
+# ---------------------------------------------------------
+async def delete_participant(session: AsyncSession, participant_id: str):
+    p = await session.get(Participant, participant_id)
+    if not p:
+        return None
+
+    await session.delete(p)
+    await session.commit()
+    return True

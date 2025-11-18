@@ -12,6 +12,13 @@ class EventCreate(BaseModel):
     slots_available: Optional[int] = Field(None, example=50)
     recurrence_pattern: Optional[str] = Field(None, example="weekly")
 
+class EventMediaOut(BaseModel):
+    id: UUID
+    file_url: str
+    file_type: Optional[str]
+    uploaded_at: datetime
+    model_config = {"from_attributes": True}
+
 class EventUpdate(BaseModel):
     title: Optional[str]
     description: Optional[str]
@@ -34,5 +41,6 @@ class EventOut(BaseModel):
     requires_registration: Optional[bool] = None
     slots_available: Optional[int] = None
     recurrence_pattern: Optional[str] = None
+    media: Optional[list[EventMediaOut]] = None
 
     model_config = {"from_attributes": True}

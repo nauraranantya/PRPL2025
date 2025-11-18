@@ -2,8 +2,12 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createEvent, api } from "../../../api";
 
+
 export default function EventCreation() {
   const navigate = useNavigate();
+
+  const [bannerFiles, setBannerFiles] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Form states
   const [title, setTitle] = useState("");
@@ -33,7 +37,7 @@ export default function EventCreation() {
     setError(null);
 
     try {
-      // === 1. Create Event ===
+      // 1) create event
       const payload = {
         title,
         description,
@@ -44,11 +48,32 @@ export default function EventCreation() {
       };
 
       const res = await createEvent(payload);
-      if (!res.success) return setError("Gagal membuat acara.");
-
+      if (!res.success) {
+        setError("Gagal membuat acara.");
+        return;
+      }
       const eventId = res.data.id;
 
-      // === 2. Create recurrence if enabled ===
+      // 2) upload banners (if any). upload one-by-one to keep memory down
+      if (bannerFiles.length > 0) {
+        for (let i = 0; i < bannerFiles.length; i++) {
+          const f = bannerFiles[i];
+          const form = new FormData();
+          form.append("file", f);
+
+          // use api (axios instance) directly so you can supply onUploadProgress
+          await api.post(`/events/${eventId}/media`, form, {
+            headers: { "Content-Type": "multipart/form-data" },
+            onUploadProgress: (progressEvent) => {
+              const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(percent);
+            },
+          });
+          setUploadProgress(0);
+        }
+      }
+
+      // 3) recurrence if chosen...
       if (recurring) {
         await api.post("/recurrences", {
           event_id: eventId,
@@ -95,6 +120,23 @@ export default function EventCreation() {
         <div>
           <label className="block font-medium mb-1">Deskripsi</label>
           <textarea className="w-full border p-2 rounded" rows={4} value={description} onChange={(e)=>setDescription(e.target.value)} />
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">Upload Banner(s) (opsional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              setBannerFiles(Array.from(e.target.files));
+            }}
+          />
+          {bannerFiles.length > 0 && (
+            <div className="text-sm mt-2">
+              {bannerFiles.length} file(s) selected
+            </div>
+          )}
         </div>
 
         {/* Registration toggle */}

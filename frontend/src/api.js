@@ -155,6 +155,19 @@ export async function deleteEvent(id) {
   return res.data;
 }
 
+export async function uploadEventMedia(eventId, file) {
+  const form = new FormData();
+  form.append("file", file);
+
+  const res = await api.post(`/media/${eventId}`, form);
+  return res.data;
+}
+
+export async function deleteEventMedia(mediaId) {
+  const res = await api.delete(`/media/${mediaId}`);
+  return res.data;
+}
+
 /* ---------------------------------------------------
    PARTICIPANTS
 --------------------------------------------------- */
