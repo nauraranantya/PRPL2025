@@ -16,7 +16,7 @@ export default function Navbar({ toggleSidebar, admin }) {
     if (path.startsWith("/admin/acara")) return "Acara";
     if (path.startsWith("/admin/kehadiran")) return "Kehadiran";
     if (path.startsWith("/admin/peran")) return "Peran";
-    if (path.startsWith("/admin/kelola-akun")) return "Kelola Akun";
+    if (path.startsWith("/admin/kakun")) return "Kelola Akun";
     if (path.startsWith("/admin/pengumuman")) return "Pengumuman";
     return "Admin Panel";
   };
