@@ -146,51 +146,6 @@ export default function AttendanceManagement() {
               );
             })}
           </div>
-
-          {/* REPORT */}
-          <div className="p-6 bg-white shadow rounded mt-6">
-            <h3 className="font-bold mb-3">Laporan Kehadiran</h3>
-
-            <div className="grid grid-cols-3 gap-4">
-              <input
-                type="date"
-                className="border p-2 rounded"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <input
-                type="date"
-                className="border p-2 rounded"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-              <button
-                className="bg-blue-600 text-white rounded px-4"
-                onClick={generateReport}
-              >
-                Generate
-              </button>
-            </div>
-
-            {reportRows.length > 0 && (
-              <table className="w-full border mt-4">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border p-2">Peserta</th>
-                    <th className="border p-2">Jumlah Hadir</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportRows.map((r) => (
-                    <tr key={r.participant_id}>
-                      <td className="border p-2">{r.participant_name || r.participant_id}</td>
-                      <td className="border p-2">{r.attended_count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
         </>
       )}
     </div>
