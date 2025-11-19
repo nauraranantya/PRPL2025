@@ -81,7 +81,7 @@ export default function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
 
           {/* Accounts */}
-          <Route path="kelola-akun" element={<VillagersAccount />} />
+          <Route path="akun" element={<VillagersAccount />} />
           <Route path="akun/edit/:id" element={<AccountEdit />} />
 
           {/* Roles */}

@@ -120,6 +120,16 @@ export async function fetchUser(id) {
   return res.data;
 }
 
+export async function updateUser(id, data) {
+  const res = await api.put(`/users/${id}`, data);
+  return res.data;
+}
+
+export async function deleteUser(id) {
+  const res = await api.delete(`/users/${id}`);
+  return res.data;
+}
+
 /* ---------------------------------------------------
    EVENTS
 --------------------------------------------------- */

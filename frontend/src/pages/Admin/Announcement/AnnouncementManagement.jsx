@@ -1,90 +1,118 @@
 import React, { useEffect, useState } from "react";
 import { fetchAnnouncements, deleteAnnouncement } from "../../../api";
 import { Link } from "react-router-dom";
+import AdminAnnouncementCard from "../../../components/admin/AdminAnnouncementCard";
 
 export default function AnnouncementManagement() {
   const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchAnnouncements()
-      .then((res) => {
-        const array = res?.data;
-
-        if (Array.isArray(array)) {
-          setAnnouncements(array);
-        } else {
-          console.error("Announcements is not an array:", array);
-          setAnnouncements([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch announcements:", err);
-        setAnnouncements([]); // fail-safe
-      });
+    loadAnnouncements();
   }, []);
+
+  async function loadAnnouncements() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await fetchAnnouncements();
+      const array = res?.data;
+
+      if (Array.isArray(array)) {
+        // Sort by date, newest first
+        const sorted = array.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+        setAnnouncements(sorted);
+      } else {
+        console.error("Announcements is not an array:", array);
+        setAnnouncements([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch announcements:", err);
+      setError("Gagal memuat pengumuman");
+      setAnnouncements([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleDelete(id) {
     if (!window.confirm("Yakin ingin menghapus pengumuman ini?")) return;
 
-    await deleteAnnouncement(id);
-    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    try {
+      const res = await deleteAnnouncement(id);
+      
+      if (res.success) {
+        setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+        alert("Pengumuman berhasil dihapus");
+      } else {
+        alert("Gagal menghapus pengumuman");
+      }
+    } catch (err) {
+      console.error("Failed to delete announcement:", err);
+      alert("Terjadi kesalahan saat menghapus pengumuman");
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-[#043873]">
           Kelola Pengumuman
         </h1>
 
         <Link
           to="/admin/pengumuman/tambah"
-          className="bg-[#043873] text-white px-4 py-2 rounded hover:bg-blue-900"
+          className="bg-[#043873] text-white px-5 py-2.5 rounded-md hover:bg-blue-900 transition-colors font-medium"
         >
           + Tambah Pengumuman
         </Link>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg p-6">
-        {announcements.length === 0 ? (
-          <p className="text-gray-600 text-center py-4">
-            Belum ada pengumuman.
-          </p>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="text-left border-b">
-                <th className="p-3 font-semibold">Judul</th>
-                <th className="p-3 font-semibold w-40">Aksi</th>
-              </tr>
-            </thead>
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-12 text-gray-600">
+          Memuat pengumuman...
+        </div>
+      )}
 
-            <tbody>
-              {announcements.map((a) => (
-                <tr key={a.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3">{a.title}</td>
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
 
-                  <td className="p-3 flex gap-3">
-                    <Link
-                      to={`/admin/pengumuman/edit/${a.id}`}
-                      className="px-3 py-1 rounded text-white bg-green-600 hover:bg-green-700"
-                    >
-                      Edit
-                    </Link>
-
-                    <button
-                      onClick={() => handleDelete(a.id)}
-                      className="px-3 py-1 rounded text-white bg-red-600 hover:bg-red-700"
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
+      {/* Content */}
+      {!loading && !error && (
+        <>
+          {announcements.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+              <p className="text-gray-500 mb-4">Belum ada pengumuman.</p>
+              <Link
+                to="/admin/pengumuman/tambah"
+                className="inline-block bg-[#043873] text-white px-6 py-2 rounded-md hover:bg-blue-900 transition-colors"
+              >
+                Buat Pengumuman Pertama
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4 max-w-4xl mx-auto">
+              {announcements.map((announcement) => (
+                <AdminAnnouncementCard
+                  key={announcement.id}
+                  announcement={announcement}
+                  onDelete={handleDelete}
+                />
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

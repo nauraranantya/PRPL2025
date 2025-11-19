@@ -1,32 +1,62 @@
 import React, { useState, useEffect } from "react";
 import AccountCard from "../../components/admin/AccountCard";
-import { fetchUsers , fetchAllUsers} from "../../api";
-import { Trash2 } from "lucide-react";
+import { fetchAllUsers, deleteUser as deleteUserAPI } from "../../api";
 
 export default function VillagersAccount() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function loadUsers() {
-      try {
-        const res = await fetchAllUsers();
-        if (res.success) setUsers(res.data);
-      } catch (err) {
-        console.error("Failed to fetch users:", err);
-      }
-    }
     loadUsers();
   }, []);
 
-  const filteredUsers = users.filter((u) =>
-    (u.email || u.phone || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  async function loadUsers() {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const res = await fetchAllUsers();
+      
+      if (res.success) {
+        setUsers(res.data);
+      } else {
+        setError("Gagal memuat data pengguna");
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+      setError("Terjadi kesalahan saat memuat data");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const deleteUser = (id) => {
-    if (window.confirm("Hapus akun ini?")) {
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-      // TODO: call real backend delete when you add it
+  const filteredUsers = users.filter((u) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (u.full_name || "").toLowerCase().includes(searchLower) ||
+      (u.email || "").toLowerCase().includes(searchLower) ||
+      (u.phone || "").toLowerCase().includes(searchLower)
+    );
+  });
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm("Hapus akun ini?")) return;
+
+    try {
+      const res = await deleteUserAPI(id);
+      
+      if (res.success) {
+        // Remove from local state
+        setUsers((prev) => prev.filter((u) => u.id !== id));
+        alert("Akun berhasil dihapus");
+      } else {
+        alert("Gagal menghapus akun");
+      }
+    } catch (err) {
+      console.error("Failed to delete user:", err);
+      alert("Terjadi kesalahan saat menghapus akun");
     }
   };
 
@@ -42,21 +72,37 @@ export default function VillagersAccount() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      <div className="space-y-4 mt-4">
-        {filteredUsers.length > 0 ? (
-          filteredUsers.map((u) => (
-            <AccountCard
-              key={u.id}
-              user={u}
-              editPath={`/admin/akun/edit/${u.id}?returnTo=/admin/kelola-akun`}
-              showAttendanceButton={false}
-              onDelete={() => deleteUser(u.id)}
-            />
-          ))
-        ) : (
-          <p className="text-gray-500">Tidak ada akun ditemukan.</p>
-        )}
-      </div>
+      {loading && (
+        <div className="text-center py-8 text-gray-600">
+          Memuat data pengguna...
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="space-y-4 mt-4">
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((u) => (
+              <AccountCard
+                key={u.id}
+                user={u}
+                editPath={`/admin/akun/edit/${u.id}?returnTo=/admin/akun`}
+                showAttendanceButton={false}
+                onDelete={() => handleDeleteUser(u.id)}
+              />
+            ))
+          ) : (
+            <p className="text-gray-500">
+              {searchTerm ? "Tidak ada akun yang cocok dengan pencarian." : "Tidak ada akun ditemukan."}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

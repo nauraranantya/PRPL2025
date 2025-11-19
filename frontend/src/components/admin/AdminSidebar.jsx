@@ -20,7 +20,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       icon: <LayoutDashboard size={18} />,
     },
     {
-      to: "/admin/kelola-akun",
+      to: "/admin/akun",
       label: "Akun Warga",
       icon: <Users size={18} />,
     },
