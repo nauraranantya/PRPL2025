@@ -18,9 +18,10 @@ async def register_participant(
     return await crud.participation.create_participant(session, payload.model_dump())
 
 
-@router.get("/{event_id}", response_model=list[ParticipantOut])
+@router.get("/{event_id}")
 async def list_participants(event_id: str, session: AsyncSession = Depends(get_session)):
-    return await crud.participation.list_participants(session, event_id)
+    rows = await crud.participation.list_participants_with_user(session, event_id)
+    return rows
 
 
 @router.put("/{participant_id}/assign-role/{role_id}", response_model=ParticipantOut)

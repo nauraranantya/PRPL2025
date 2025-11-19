@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   fetchEvents,
-  fetchEventRoles,
+  fetchRoles,
   fetchEventParticipants,
   assignRole
 } from "../../../api"; 
@@ -50,7 +50,7 @@ export default function RoleAssign() {
     if (selectedEvent) {
       async function load() {
         try {
-          const res = await fetchEventRoles(selectedEvent);
+          const res = await fetchRoles(selectedEvent);
           const rolesData = Array.isArray(res) ? res : res.data || [];
           setRoles(rolesData);
         } catch (err) {

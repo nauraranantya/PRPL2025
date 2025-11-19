@@ -45,12 +45,41 @@ async def list_participants(session: AsyncSession, event_id: str):
             "user_id": participant.user_id,
             "role_id": participant.role_id,
             "registered_at": participant.registered_at,
-            "user_full_name": row[1],  # full_name
-            "user_email": row[2],       # email
-            "user_phone": row[3],       # phone - ADD THIS
+            "user_full_name": row[1],  
+            "user_email": row[2],       
+            "user_phone": row[3],       
         })
     
     return results
+
+async def list_participants_with_user(session, event_id: str):
+    q = await session.execute(
+        select(
+            Participant.id,
+            Participant.event_id,
+            Participant.user_id,
+            Participant.role_id,
+            Participant.registered_at,
+            User.full_name,
+            User.email,
+            User.phone
+        ).join(User, User.id == Participant.user_id)
+        .where(Participant.event_id == event_id)
+    )
+    rows = q.all()
+    return [
+        {
+            "id": r.id,
+            "event_id": r.event_id,
+            "user_id": r.user_id,
+            "role_id": r.role_id,
+            "registered_at": r.registered_at,
+            "user_full_name": r.full_name,
+            "user_email": r.email,
+            "user_phone": r.phone,
+        }
+        for r in rows
+    ]
 
 # ---------------------------------------------------------
 # ASSIGN ROLE

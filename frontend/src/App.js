@@ -22,9 +22,9 @@ import AdminLayout from "./components/admin/AdminLayout";
 // Admin – Dashboard 
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 
-// === NEW: Registration + Attendance pages ===
 import RegistrationManagement from "./pages/Admin/RegistrationManagement";
 import AttendanceManagement from "./pages/Admin/Attendance";
+import ReportsAnalytics from "./pages/Admin/ReportsAnalytics";
 
 // Admin – Accounts
 import VillagersAccount from "./pages/Admin/Account/AccountVillagers";
@@ -123,13 +123,17 @@ export default function App() {
           <Route path="peran/edit/:roleId" element={<RoleEdit />} />
           <Route path="peran/tugaskan/:roleId" element={<RoleAssign />} />
 
-          {/* === NEW: REGISTRATION MANAGEMENT === */}
+          {/* registration */}
           <Route path="acara/registrasi" element={<RegistrationManagement />} />
           <Route path="acara/registrasi/:eventId" element={<RegistrationManagement />} />
 
           {/* === NEW: ATTENDANCE MANAGEMENT === */}
           <Route path="acara/kehadiran" element={<AttendanceManagement />} />
           <Route path="acara/kehadiran/:eventId" element={<AttendanceManagement />} />
+
+          {/* reports & analytics */}
+          <Route path="laporan" element={<ReportsAnalytics />} />
+          <Route path="laporan/:eventId" element={<ReportsAnalytics />} />
 
           {/* Events */}
           <Route path="acara" element={<EventManagement />} />

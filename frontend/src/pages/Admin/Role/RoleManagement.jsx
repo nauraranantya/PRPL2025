@@ -4,7 +4,7 @@ import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import {
   fetchEvents,
-  fetchEventRoles,
+  fetchRoles,
   fetchEventParticipants,
   unassignRole,
 } from "../../../api";
@@ -49,7 +49,7 @@ export default function RoleManagement() {
       
       try {
         // ---- Load Roles ----
-        const rolesRes = await fetchEventRoles(selectedEvent);
+        const rolesRes = await fetchRoles(selectedEvent);
         console.log("Roles Response:", rolesRes);
         
         // The API returns array directly, not wrapped in .data
@@ -92,23 +92,29 @@ export default function RoleManagement() {
   // Merge roles with assigned participant
   // ---------------------------------------------
   const merged = roles.map((role) => {
-    const assigned = participants.find(
-      (p) => p.role_id === role.id
-    );
+    const assigned = participants.find((p) => p.role_id === role.id);
 
     return {
       ...role,
-      assigned_to: assigned?.user?.full_name || assigned?.user_id || null,
+      assigned_to_name: assigned?.user_full_name || null,
+      assigned_to_email: assigned?.user_email || null,
+      assigned_to_phone: assigned?.user_phone || null,
       assigned_participant_id: assigned?.id || null,
     };
   });
 
-  const filteredRoles = merged.filter((role) =>
-    (role.assigned_to ?? "")
-      .toString()
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  const filteredRoles = merged.filter((role) => {
+    const text = [
+      role.assigned_to_name,
+      role.assigned_to_email,
+      role.assigned_to_phone
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return text.includes(searchTerm.toLowerCase());
+  });
 
   // Counts
   const totalRoles = merged.length;
@@ -244,8 +250,18 @@ export default function RoleManagement() {
 
                   <p className="text-gray-500 text-sm">Ditugaskan kepada:</p>
 
-                  {role.assigned_to ? (
-                    <p className="font-medium mt-1">{role.assigned_to}</p>
+                  {role.assigned_to_name ? (
+                    <div className="mt-1">
+                      <p className="font-medium">{role.assigned_to_name}</p>
+
+                      <p className="text-sm text-gray-600">
+                        {role.assigned_to_email || "-"}
+                      </p>
+
+                      <p className="text-sm text-gray-600">
+                        {role.assigned_to_phone || "-"}
+                      </p>
+                    </div>
                   ) : (
                     <p className="text-gray-400 italic">Belum ditugaskan</p>
                   )}

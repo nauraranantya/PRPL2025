@@ -1,4 +1,3 @@
-// src/api.js
 import axios from "axios";
 
 export const API_BASE = "http://localhost:8000/api";
@@ -10,20 +9,15 @@ export const api = axios.create({
   baseURL: API_BASE,
 });
 
-// Confirm interceptors are loaded
-console.log("API.js loaded – interceptors active");
-
 /* ---------------------------------------------------
    REQUEST INTERCEPTOR – attach access token
 --------------------------------------------------- */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => Promise.reject(error)
@@ -79,15 +73,11 @@ api.interceptors.response.use(
 --------------------------------------------------- */
 export async function loginUser(identifier, password) {
   const id = String(identifier).trim();
-
-  const res = await api.post("/auth/login", {
-    identifier: id,
-    password,
-  });
-
+  const res = await api.post("/auth/login", { identifier: id, password });
+  
   localStorage.setItem("access_token", res.data.access_token);
   localStorage.setItem("refresh_token", res.data.refresh_token);
-
+  
   return res.data;
 }
 
@@ -102,7 +92,6 @@ export async function signupPhone(data) {
 }
 
 export async function fetchMe() {
-  // Let the interceptor handle the token automatically
   const res = await api.get("/auth/me");
   return res.data;
 }
@@ -133,20 +122,13 @@ export async function deleteUser(id) {
 /* ---------------------------------------------------
    EVENTS
 --------------------------------------------------- */
-export async function fetchEvents() {
-  const res = await api.get("/events");
+export async function fetchEvents(params = {}) {
+  const res = await api.get("/events", { params });
   return res.data;
 }
 
 export async function fetchEvent(id) {
   const res = await api.get(`/events/${id}`);
-  return res.data;
-}
-
-export async function fetchUpcomingEvents() {
-  const res = await api.get("/events", {
-    params: { upcoming }
-  });
   return res.data;
 }
 
@@ -168,7 +150,6 @@ export async function deleteEvent(id) {
 export async function uploadEventMedia(eventId, file) {
   const form = new FormData();
   form.append("file", file);
-
   const res = await api.post(`/media/${eventId}`, form);
   return res.data;
 }
@@ -181,47 +162,37 @@ export async function deleteEventMedia(mediaId) {
 /* ---------------------------------------------------
    PARTICIPANTS
 --------------------------------------------------- */
-// Get participants for an event
 export async function fetchEventParticipants(eventId) {
   const res = await api.get(`/participants/${eventId}`);
-  return res.data;  
+  return res.data;
 }
 
 // User registers themselves for an event
 export async function registerParticipant(eventId) {
-  const token = localStorage.getItem("access_token");
-
-  return api.post(`/events/${eventId}/register`, null, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const res = await api.post(`/events/${eventId}/register`, null);
+  return res.data;
 }
 
 // Admin registers any user for an event
 export async function registerParticipantByAdmin(eventId, name, email, phone) {
-  const token = localStorage.getItem("access_token");
-
-  return api.post(`/events/${eventId}/register-admin`, {
+  const res = await api.post(`/events/${eventId}/register-admin`, {
     full_name: name,
     email: email,
     phone: phone
-  }, {
-    headers: { Authorization: `Bearer ${token}` }
   });
+  return res.data;
 }
 
-// Delete participant
 export async function deleteParticipant(id) {
   const res = await api.delete(`/participants/${id}`);
   return res.data;
 }
 
-// Assign role to participant
 export async function assignRole(participantId, roleId) {
   const res = await api.put(`/participants/${participantId}/assign-role/${roleId}`);
   return res.data;
 }
 
-// Unassign role
 export async function unassignRole(participantId) {
   const res = await api.put(`/participants/${participantId}/unassign-role`);
   return res.data;
@@ -230,15 +201,9 @@ export async function unassignRole(participantId) {
 /* ---------------------------------------------------
    ROLES
 --------------------------------------------------- */
-export async function fetchRoles() {
-  const res = await api.get("/roles");
-  return res.data;
-}
-
-export async function fetchEventRoles(eventId) {
-  const res = await api.get(`/roles`, {
-    params: { event_id: eventId }
-  });
+export async function fetchRoles(eventId = null) {
+  const params = eventId ? { event_id: eventId } : {};
+  const res = await api.get("/roles", { params });
   return res.data;
 }
 
@@ -281,6 +246,68 @@ export async function deleteAnnouncement(id) {
 }
 
 /* ---------------------------------------------------
+   ATTENDANCE
+--------------------------------------------------- */
+export async function markAttendance(participantId, eventId) {
+  const res = await api.post(`/attendance`, {
+    event_id: eventId,
+    participant_id: participantId,
+    attended_at: new Date().toISOString(),
+    notes: null
+  });
+  return res.data;
+}
+
+export async function deleteAttendance(attendanceId) {
+  const res = await api.delete(`/attendance/${attendanceId}`);
+  return res.data;
+}
+
+export async function fetchEventAttendance(eventId) {
+  const res = await api.get(`/attendance`, {
+    params: { event_id: eventId }
+  });
+  return res.data;
+}
+
+export async function attendanceReport(params) {
+  const res = await api.get(`/attendance/report`, { params });
+  return res.data;
+}
+
+export async function bulkMarkAttendance(eventId, rows) {
+  const res = await api.post(`/attendance/events/${eventId}/bulk`, rows);
+  return res.data;
+}
+
+export async function fetchMyAttendance(eventId) {
+  const res = await api.get(`/attendance/events/${eventId}/me`);
+  return res.data;
+}
+
+export async function monthlyAttendanceReport(opts) {
+  const res = await api.get(`/attendance/reports/monthly`, { params: opts });
+  return res.data;
+}
+
+export async function exportAttendanceCSV(params) {
+  return api.get(`/attendance/reports/export`, { 
+    params, 
+    responseType: "blob" 
+  });
+}
+
+export function exportAttendanceExcel(eventId, start, end) {
+  const url = `${API_BASE}/attendance/export/excel?event_id=${eventId}&start_date=${start}&end_date=${end}`;
+  window.open(url, "_blank");
+}
+
+export function exportAttendancePDF(eventId, start, end) {
+  const url = `${API_BASE}/attendance/export/pdf?event_id=${eventId}&start_date=${start}&end_date=${end}`;
+  window.open(url, "_blank");
+}
+
+/* ---------------------------------------------------
    DASHBOARD STATS
 --------------------------------------------------- */
 export async function fetchDashboardStats() {
@@ -292,7 +319,7 @@ export async function fetchDashboardStats() {
     ]);
 
     // Get all events
-    const events = eventsRes.data || [];
+    const events = eventsRes.data || eventsRes || [];
     
     // Filter upcoming events
     const upcomingEvents = events.filter(
@@ -319,12 +346,14 @@ export async function fetchDashboardStats() {
       });
     });
 
+    const roles = rolesRes.data || rolesRes || [];
+
     return {
       success: true,
       data: {
         total_participants: totalRegistrations,
         active_roles: activeRolesCount,
-        total_roles: rolesRes.length || 0
+        total_roles: roles.length
       }
     };
   } catch (error) {
@@ -338,79 +367,4 @@ export async function fetchDashboardStats() {
       }
     };
   }
-}
-
-/**
- * Fetch participant count for a specific event
- */
-export async function fetchEventParticipantCount(eventId) {
-  try {
-    const res = await fetchEventParticipants(eventId);
-    return res.length || 0;
-  } catch (error) {
-    console.error(`Error fetching participants for event ${eventId}:`, error);
-    return 0;
-  }
-}
-
-// Attendance
-export async function markAttendance(participantId, eventId) {
-  const token = localStorage.getItem("access_token");
-  
-  return api.post(`/attendance`, {
-    event_id: eventId,
-    participant_id: participantId,
-    attended_at: new Date().toISOString(),
-    notes: null
-  }, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-}
-
-
-export async function bulkMarkAttendance(eventId, rows) {
-  const res = await api.post(`/attendance/events/${eventId}/bulk`, rows);
-  return res.data;
-}
-
-export async function fetchEventAttendance(eventId) {
-  const res = await api.get(`/attendance`, {
-    params: { event_id: eventId }
-  });
-  return res.data;
-}
-
-export async function fetchMyAttendance(eventId) {
-  const res = await api.get(`/attendance/events/${eventId}/me`);
-  return res.data;
-}
-
-
-// DELETE /attendance/{attendance_id}
-export async function deleteAttendance(attendanceId) {
-  const res = await api.delete(`/attendance/${attendanceId}`);
-  return res.data;
-}
-
-// GET /attendance/report?event_id=&start_date=&end_date=
-export async function attendanceReport(params) {
-  const res = await api.get(`/attendance/report`, {
-    params: {
-      event_id: params.event_id,
-      start_date: params.start_date,
-      end_date: params.end_date
-    }
-  });
-  return res.data;
-}
-
-export async function monthlyAttendanceReport(opts) {
-  // opts: { event_id, year, month }
-  const res = await api.get(`/attendance/reports/monthly`, { params: opts });
-  return res.data;
-}
-
-export async function exportAttendanceCSV(params) {
-  // params: { event_id, start, end }
-  return api.get(`/attendance/reports/export`, { params, responseType: "blob" });
 }

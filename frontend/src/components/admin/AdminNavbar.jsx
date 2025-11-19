@@ -12,11 +12,9 @@ export default function Navbar({ toggleSidebar, admin }) {
   const getPageTitle = () => {
     if (path === "/admin" || path === "/admin/dashboard") return "Dashboard";
 
-    // NEW — Registration & Attendance pages
     if (path.startsWith("/admin/acara/registrasi")) return "Registrasi Acara";
     if (path.startsWith("/admin/acara/kehadiran")) return "Kehadiran Acara";
-
-    // Existing pages
+    if (path.startsWith("/admin/laporan")) return "Laporan & Analitik";
     if (path.startsWith("/admin/acara/tambah")) return "Buat Acara";
     if (path.startsWith("/admin/acara/edit")) return "Edit Acara";
     if (path.startsWith("/admin/acara")) return "Kelola Acara";

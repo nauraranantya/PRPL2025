@@ -6,6 +6,10 @@ from app.core.deps import require_admin_user, require_user
 from app import crud
 from app.schemas.attendance import AttendanceCreate, AttendanceOut, AttendanceReportRow
 from datetime import date
+from fastapi.responses import StreamingResponse
+import io
+from openpyxl import Workbook
+from reportlab.pdfgen import canvas
 
 router = APIRouter()
 
@@ -59,3 +63,61 @@ async def attendance_report(
     """
     rows = await crud.attendance.attendance_report(session, event_id, start_date, end_date)
     return rows
+
+@router.get("/export/excel")
+async def export_excel(
+    event_id: str,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    session: AsyncSession = Depends(get_session)
+):
+    rows = await crud.attendance.attendance_report(session, event_id, start_date, end_date)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Attendance Report"
+
+    ws.append(["Participant ID", "Total Hadir"])
+
+    for row in rows:
+        ws.append([row["participant_id"], row["attended_count"]])
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=attendance.xlsx"}
+    )
+
+@router.get("/export/pdf")
+async def export_pdf(
+    event_id: str,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    session: AsyncSession = Depends(get_session)
+):
+    rows = await crud.attendance.attendance_report(session, event_id, start_date, end_date)
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer)
+    c.setFont("Helvetica", 12)
+
+    y = 800
+    c.drawString(50, y, f"Attendance Report — Event {event_id}")
+    y -= 40
+
+    for row in rows:
+        c.drawString(50, y, f"{row['participant_id']} — {row['attended_count']} hadir")
+        y -= 20
+
+    c.save()
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=attendance.pdf"}
+    )

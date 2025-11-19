@@ -12,5 +12,6 @@ python-jose[cryptography]
 uvicorn
 pydantic[email]
 Pillow
-supabase-py
 python-multipart
+openpyxl
+reportlab

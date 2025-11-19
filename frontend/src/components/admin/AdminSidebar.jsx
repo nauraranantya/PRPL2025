@@ -54,6 +54,11 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       label: "Pengumuman",
       icon: <Megaphone size={18} />,
     },
+    {
+      to: "/admin/laporan",
+      label: "Laporan & Analitik",
+      icon: <ClipboardList size={18} />,
+    },
   ];
 
   const isRouteActive = (path) => location.pathname.startsWith(path);

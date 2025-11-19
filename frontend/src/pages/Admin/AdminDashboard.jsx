@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchEvents, deleteEvent, fetchDashboardStats, fetchEventParticipantCount } from "../../api";
+import { fetchEvents, deleteEvent, fetchDashboardStats, fetchEventParticipants } from "../../api";
 import EventCard from "../../components/admin/AdminEventCard";
 
 export default function AdminDashboard() {
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     
     for (const event of eventsList) {
       try {
-        const count = await fetchEventParticipantCount(event.id);
+        const count = await fetchEventParticipants(eventId).length;
         counts[event.id] = count;
       } catch (err) {
         console.error(`Failed to load participants for event ${event.id}:`, err);
