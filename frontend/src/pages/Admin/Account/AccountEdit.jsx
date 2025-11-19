@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
-import { fetchUser, updateUser } from "../../api";
+import { fetchUser, updateUser } from "../../../api";
 
 export default function AccountEdit() {
   const { id } = useParams();

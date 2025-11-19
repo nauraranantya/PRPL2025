@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import AccountCard from "../../components/admin/AccountCard";
-import { fetchAllUsers, deleteUser as deleteUserAPI } from "../../api";
+import AccountCard from "../../../components/admin/AccountCard";
+import { fetchAllUsers, deleteUser as deleteUserAPI } from "../../../api";
 
 export default function VillagersAccount() {
   const [searchTerm, setSearchTerm] = useState("");
