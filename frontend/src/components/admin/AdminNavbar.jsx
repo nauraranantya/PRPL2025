@@ -12,7 +12,7 @@ export default function Navbar({ toggleSidebar, admin }) {
   const getPageTitle = () => {
     if (path === "/admin" || path === "/admin/dashboard") return "Dashboard";
 
-    // NEW — Registration & Attendance pages
+    // Registration & Attendance pages
     if (path.startsWith("/admin/acara/registrasi")) return "Registrasi Acara";
     if (path.startsWith("/admin/acara/kehadiran")) return "Kehadiran Acara";
 
@@ -25,6 +25,15 @@ export default function Navbar({ toggleSidebar, admin }) {
     if (path.startsWith("/admin/pengumuman")) return "Pengumuman";
 
     return "Admin Panel";
+  };
+
+  const handleLogout = () => {
+    // FIXED: Clear ALL storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Redirect to home
+    window.location.href = "/";
   };
 
   return (
@@ -46,7 +55,7 @@ export default function Navbar({ toggleSidebar, admin }) {
 
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="px-4 py-2 rounded text-sm"
+            className="px-4 py-2 rounded text-sm hover:bg-blue-700 transition"
           >
             Keluar
           </button>
@@ -55,10 +64,7 @@ export default function Navbar({ toggleSidebar, admin }) {
 
       {showLogoutModal && (
         <LogoutModal
-          onConfirm={() => {
-            localStorage.removeItem("token");
-            window.location.href = "/";
-          }}
+          onConfirm={handleLogout}
           onClose={() => setShowLogoutModal(false)}
         />
       )}

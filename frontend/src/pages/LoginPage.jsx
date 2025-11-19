@@ -31,7 +31,7 @@ export default function LoginPage({ setUser }) {
         navigate("/admin");
       } else {
         // FIXED: Redirect villagers to sidebar page
-        navigate("/acara-saya");
+        navigate("/");
       }
     } catch (err) {
       console.error("Login error:", err);

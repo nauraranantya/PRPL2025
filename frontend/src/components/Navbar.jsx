@@ -1,7 +1,7 @@
 // src/components/Navbar.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Bell, User, LogOut, ChevronDown, Home} from "lucide-react";
+import { Calendar, Bell, User, LogOut, ChevronDown, Home } from "lucide-react";
 
 export default function Navbar({ user, setUser }) {
   const navigate = useNavigate();
@@ -21,10 +21,18 @@ export default function Navbar({ user, setUser }) {
   }, []);
 
   const handleLogout = () => {
+    // Clear storage first
     sessionStorage.clear();
     localStorage.clear();
+    
+    // IMPORTANT: Clear user state BEFORE navigation
     setUser(null);
+    
+    // Navigate to home
     navigate("/");
+    
+    // Force reload to ensure clean state
+    window.location.reload();
   };
 
   return (
