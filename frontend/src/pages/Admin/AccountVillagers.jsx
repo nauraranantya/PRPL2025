@@ -91,7 +91,7 @@ export default function VillagersAccount() {
               <AccountCard
                 key={u.id}
                 user={u}
-                editPath={`/admin/akun/edit/${u.id}?returnTo=/admin/kelola-akun`}
+                editPath={`/admin/akun/edit/${u.id}?returnTo=/admin/akun`}
                 showAttendanceButton={false}
                 onDelete={() => handleDeleteUser(u.id)}
               />
