@@ -188,9 +188,12 @@ export async function fetchEventParticipants(eventId) {
 }
 
 // Register participant
-export async function registerParticipant(data) {
-  const res = await api.post(`/participants`, data);
-  return res.data;
+export async function registerParticipant(eventId) {
+  const token = localStorage.getItem("access_token");
+
+  return api.post(`/events/${eventId}/register`, null, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
 }
 
 // Delete participant

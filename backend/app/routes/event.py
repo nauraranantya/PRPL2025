@@ -97,18 +97,16 @@ async def list_events(
     upcoming: Optional[bool] = Query(False),
     session: AsyncSession = Depends(get_session)
 ):
-    # let your existing CRUD handle filtering,
-    # but add selectinload in the query
     stmt = (
         select(Event)
-        .options(selectinload(Event.media))   # <<<<< 🔥 load banners
+        .options(
+            selectinload(Event.media),
+            selectinload(Event.participants)
+        )
         .order_by(Event.event_date.asc())
     )
 
     events = (await session.execute(stmt)).scalars().all()
-
-    # NOTE: you may still want to apply q/upcoming manually
-    #       but I keep structure unchanged
 
     return {
         "success": True,
@@ -121,15 +119,13 @@ async def list_events(
 # GET EVENT BY ID (LOAD MEDIA)
 # ---------------------------------------------------------
 @router.get("/{event_id}", response_model=dict)
-async def get_event(
-    event_id: str,
-    session: AsyncSession = Depends(get_session)
-):
+async def get_event(event_id: str, session: AsyncSession = Depends(get_session)):
     stmt = (
         select(Event)
         .options(
             selectinload(Event.media),
-            selectinload(Event.recurrence)
+            selectinload(Event.recurrence),
+            selectinload(Event.participants) 
         )
         .where(Event.id == event_id)
     )

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
+from app.schemas.participant import ParticipantOut
 
 class EventCreate(BaseModel):
     title: str = Field(..., example="Gotong Royong")
@@ -42,5 +43,6 @@ class EventOut(BaseModel):
     slots_available: Optional[int] = None
     recurrence_pattern: Optional[str] = None
     media: Optional[list[EventMediaOut]] = None
+    participants: list[ParticipantOut] = []   
 
     model_config = {"from_attributes": True}

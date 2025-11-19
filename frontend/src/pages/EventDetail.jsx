@@ -33,7 +33,7 @@ export default function EventDetail() {
   const handleRegister = async () => {
     if (!event) return;
     try {
-      await registerParticipant(event.id, {}); // adjust payload if needed
+      await registerParticipant(event.id);
       setIsRegistered(true);
       alert("Konfirmasi pendaftaran akan dikirim melalui WhatsApp Anda");
     } catch (err) {
@@ -48,7 +48,7 @@ export default function EventDetail() {
 
   // calculate quota left if available
   const registeredCount = event.participants?.length || 0;
-  const quota = event.quota || null; // assume backend may provide a quota field
+  const quota = event.slots_available ?? null;
   const slotsLeft = quota ? Math.max(quota - registeredCount, 0) : null;
 
   // get first poster image if available
@@ -117,22 +117,35 @@ export default function EventDetail() {
           )}
         </div>
 
-        {/* Register Button */}
-        {event.requires_registration && !isRegistered && (
-          <button
-            onClick={handleRegister}
-            className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 font-bold text-lg transition-colors shadow-md hover:shadow-lg"
-          >
-            Daftar Sekarang
-          </button>
-        )}
+        {/* Registration Section */}
+        {event.requires_registration && (
+          <>
+            {/* If event is full */}
+            {quota && slotsLeft === 0 && !isRegistered && (
+              <div className="bg-red-50 border-2 border-red-400 text-red-700 rounded-lg p-4 text-center font-semibold mt-4">
+                Acara sudah penuh
+              </div>
+            )}
 
-        {isRegistered && (
-          <div className="bg-green-50 border-2 border-green-500 rounded-lg p-6 text-center mt-4">
-            <div className="text-green-600 font-bold text-xl mb-2">✓ Terdaftar</div>
-            <p className="text-gray-700">Anda sudah terdaftar untuk acara ini</p>
-          </div>
-        )}=
+            {/* Register Button (only if not registered & slots available) */}
+            {!isRegistered && (!quota || slotsLeft > 0) && (
+              <button
+                onClick={handleRegister}
+                className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 font-bold text-lg transition-colors shadow-md hover:shadow-lg"
+              >
+                Daftar Sekarang
+              </button>
+            )}
+
+            {/* Already registered */}
+            {isRegistered && (
+              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-6 text-center mt-4">
+                <div className="text-green-600 font-bold text-xl mb-2">✓ Terdaftar</div>
+                <p className="text-gray-700">Anda sudah terdaftar untuk acara ini</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

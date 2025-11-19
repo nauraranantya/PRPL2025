@@ -27,7 +27,7 @@ export default function EventCard({ event }) {
       <p className="text-gray-700 mt-3 line-clamp-3">{event.description}</p>
 
       <Link
-        to={`/daftar-acara/${event.id}`}
+        to={`/detail-acara/${event.id}`}
         className="inline-block mt-4 text-blue-700 font-semibold hover:underline"
       >
         Lihat Detail →
