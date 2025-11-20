@@ -33,7 +33,7 @@ export default function EventCard({ event }) {
         {/* Right side - Image */}
         <div className="sm:w-48 sm:flex-shrink-0">
           <img
-            src={poster || "/placeholder.jpg"}
+            src={poster || "/assets/placeholder.jpg"}
             alt={event.title}
             className="w-full h-32 sm:h-full object-cover rounded"
             loading="lazy"
