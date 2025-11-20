@@ -34,7 +34,16 @@ async def create_event(
         payload.slots_available,
         payload.recurrence_pattern
     )
-    return {"success": True, "data": EventOut.from_orm(ev).dict()}
+
+    # make sure base fields are loaded (optional but safe)
+    await session.refresh(ev)
+
+    # exclude participants to avoid lazy-load inside Pydantic
+    event_out = EventOut.model_validate(ev, from_attributes=True).model_dump(
+        exclude={"participants"}
+    )
+
+    return {"success": True, "data": event_out}
 
 
 

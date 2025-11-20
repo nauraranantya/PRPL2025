@@ -51,13 +51,14 @@ async def list_recurrences(
         rec = await crud.get_by_event(session, str(event_id))
         return {
             "success": True,
-            "data": [] if not rec else [RecurrenceOut.from_orm(rec)]
+            "data": [RecurrenceOut.model_validate(r, from_attributes=True) for r in rec] if rec else []
         }
 
-    # Otherwise return ALL recurrences
     rows = await crud.list_recurrences(session)
-    return {"success": True, "data": [RecurrenceOut.from_orm(r) for r in rows]}
-
+    return {
+        "success": True,
+        "data": [RecurrenceOut.model_validate(r, from_attributes=True) for r in rows]
+    }
 
 # ------------------------------------------------------
 # UPDATE
