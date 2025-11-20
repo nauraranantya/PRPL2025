@@ -38,3 +38,9 @@ class TokenPayload(BaseModel):
 class LoginRequest(BaseModel):
     identifier: str
     password: str
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    password: Optional[str] = None

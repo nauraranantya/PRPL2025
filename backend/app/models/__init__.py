@@ -6,3 +6,4 @@ from app.models.schedule import Schedule
 from app.models.event_media import EventMedia
 from app.models.user import User
 from app.models.recurrence import Recurrence
+from app.models.attendance import Attendance

@@ -2,9 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { fetchMe } from "../../api";
 
+import Navbar from "./AdminNavbar";
+import Sidebar from "./AdminSidebar";
+
 export default function AdminLayout() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen); 
   const location = useLocation();
 
   useEffect(() => {
@@ -57,5 +62,17 @@ export default function AdminLayout() {
   }
 
   // Authorized admin → continue to admin pages
-  return <Outlet />;
-}
+  return (
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar}/>
+
+        <div className="flex-1 flex flex-col">
+          <Navbar toggleSidebar={toggleSidebar} />
+
+          <main className="p-6">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    );
+  }

@@ -1,7 +1,8 @@
+// Daftar Peran
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import { API_BASE } from "../../../api";
 
 const CreateRole = () => {
   const navigate = useNavigate();
@@ -12,21 +13,22 @@ const CreateRole = () => {
   const [requiredCount, setRequiredCount] = useState("");
   const [description, setDescription] = useState("");
 
-  // Load events
+  // Load upcoming events
   useEffect(() => {
-    const fetchEvents = async () => {
+    const loadEvents = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/events`);
-        setEvents(res.data.data);
+        const res = await axios.get(`${API_BASE}/events`, {
+          params: { upcoming: true },
+        });
+        setEvents(res.data.data || []); // safe fallback
       } catch (err) {
         console.error("Failed to load events", err);
       }
     };
 
-    fetchEvents();
+    loadEvents();
   }, []);
 
-  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -36,40 +38,57 @@ const CreateRole = () => {
     }
 
     try {
+      // Get JWT token from localStorage
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        alert("Anda harus login terlebih dahulu");
+        navigate("/login");
+        return;
+      }
+
+      // Correct headers object
+      const headers = {
+        Authorization: `Bearer ${token}`, // JWT for admin
+        "x-api-key": process.env.REACT_APP_ADMIN_KEY, // optional admin API key
+      };
+
       await axios.post(
-        `${API_BASE}/roles/create`,
+        `${API_BASE}/roles`,
         {
           event_id: eventId,
           role_name: roleName,
           required_count: Number(requiredCount),
-          description: description,
+          description,
         },
-        {
-          headers: {
-            "x-api-key": process.env.REACT_APP_ADMIN_KEY,
-          },
-        }
+        { headers }
       );
 
       alert("Peran berhasil dipublikasikan!");
       navigate("/admin/peran");
     } catch (err) {
       console.error("Failed to create role", err);
-      alert("Gagal membuat peran");
+
+      if (err.response?.status === 403) {
+        alert("Hanya admin yang bisa membuat peran");
+      } else if (err.response?.status === 401) {
+        alert("Token tidak valid atau telah kadaluarsa. Silakan login ulang.");
+        localStorage.clear();
+        navigate("/login");
+      } else {
+        alert("Gagal membuat peran");
+      }
     }
   };
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Buat Peran Baru</h1>
-
       <form className="space-y-5" onSubmit={handleSubmit}>
         {/* EVENT DROPDOWN */}
         <div className="flex flex-col gap-1">
           <label className="font-semibold">
             Pilih Acara <span className="text-red-500">*</span>
           </label>
-
           <select
             className="border p-3 rounded"
             value={eventId}
@@ -121,7 +140,7 @@ const CreateRole = () => {
             placeholder="Tuliskan tugas dan tanggung jawab peran ini..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-          ></textarea>
+          />
         </div>
 
         {/* BUTTONS */}
@@ -133,7 +152,6 @@ const CreateRole = () => {
           >
             Batal
           </button>
-
           <button
             type="submit"
             className="px-4 py-2 rounded text-white"

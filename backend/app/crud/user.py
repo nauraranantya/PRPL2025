@@ -40,3 +40,11 @@ async def create_user_with_phone(session: AsyncSession, phone: str, password: st
     await session.commit()       # VERY IMPORTANT
     await session.refresh(user)
     return user
+
+async def find_by_email_or_phone(session, email: str, phone: str):
+    q = await session.execute(
+        select(User).where(
+            (User.email == email) | (User.phone == phone)
+        )
+    )
+    return q.scalars().first()

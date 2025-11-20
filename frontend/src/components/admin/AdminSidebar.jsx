@@ -7,6 +7,8 @@ import {
   ClipboardList,
   Calendar,
   Megaphone,
+  UserPlus,
+  CheckSquare,
   X,
 } from "lucide-react";
 
@@ -20,7 +22,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       icon: <LayoutDashboard size={18} />,
     },
     {
-      to: "/admin/kelola-akun",
+      to: "/admin/akun",
       label: "Akun Warga",
       icon: <Users size={18} />,
     },
@@ -29,13 +31,21 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       label: "Peran",
       icon: <Shield size={18} />,
     },
+
+    // NEW PAGES
     {
-      to: "/admin/kehadiran",
-      label: "Kehadiran",
-      icon: <ClipboardList size={18} />,
+      to: "/admin/acara/registrasi",
+      label: "Registrasi Acara",
+      icon: <UserPlus size={18} />,
     },
     {
-      to: "/admin/kelola-acara",
+      to: "/admin/acara/kehadiran",
+      label: "Kehadiran Acara",
+      icon: <CheckSquare size={18} />,
+    },
+
+    {
+      to: "/admin/acara",
       label: "Kelola Acara",
       icon: <Calendar size={18} />,
     },
@@ -44,9 +54,13 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       label: "Pengumuman",
       icon: <Megaphone size={18} />,
     },
+    {
+      to: "/admin/laporan",
+      label: "Laporan & Analitik",
+      icon: <ClipboardList size={18} />,
+    },
   ];
 
-  // Fix for "active highlight" even on nested routes (/edit/123, /tambah, etc.)
   const isRouteActive = (path) => location.pathname.startsWith(path);
 
   return (
@@ -55,16 +69,15 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         isOpen ? "translate-x-0" : "-translate-x-full"
       } transition duration-300 ease-in-out z-40`}
     >
-      {/* Close button (mobile only) */}
       <button
         onClick={toggleSidebar}
-        className="md:hidden p-2 text-gray-200 hover:text-white absolute top-4 right-4"
+        className="p-2 text-gray-200 hover:text-white absolute top-4 right-4"
       >
         <X size={20} />
       </button>
 
       <div className="mt-10">
-        <h2 className="text-xl font-bold px-4 mb-4">Admin Panel</h2>
+        <h2 className="text-xl font-bold px-4 mb-4">Menu</h2>
 
         <nav className="space-y-1">
           {links.map((link) => {
