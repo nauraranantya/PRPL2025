@@ -13,10 +13,13 @@ try:
     parsed = urlparse(DATABASE_URL)
     safe_url = f"{parsed.scheme}://{parsed.username}:***@{parsed.hostname}:{parsed.port}{parsed.path}"
     logger.info(f"Connecting to database: {safe_url}")
+    logger.info(f"Using pooler: {'.pooler.supabase.com' in (parsed.hostname or '')}")
 except Exception as e:
     logger.warning(f"Could not parse DATABASE_URL: {e}")
 
-logger.info("Creating database engine WITHOUT SSL (testing)")
+# Check if using pooler (port 6543 = transaction mode, no prepared statements needed)
+is_pooler = "pooler.supabase.com" in DATABASE_URL
+logger.info(f"Connection pooler detected: {is_pooler}")
 
 engine = create_async_engine(
     DATABASE_URL,
@@ -25,9 +28,11 @@ engine = create_async_engine(
     pool_recycle=1800,
     future=True,
     connect_args={
-        "ssl": None,  # Disable SSL temporarily to test
         "statement_cache_size": 0,
         "prepared_statement_cache_size": 0,
+        "server_settings": {
+            "application_name": "village_events_railway"
+        }
     }
 )
 
@@ -41,11 +46,12 @@ async def get_session():
 
 async def init_db():
     from app.models import event, announcement
-    logger.info("Testing database connection (SSL disabled)...")
+    logger.info("Testing database connection via pooler...")
     try:
         async with engine.begin() as conn:
             await conn.run_sync(lambda sync_conn: None)
         logger.info("Database connection successful!")
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
+        logger.error(f"Make sure you're using Supabase connection pooler URL")
         raise
