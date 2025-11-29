@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
-import ssl
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,12 +16,7 @@ try:
 except Exception as e:
     logger.warning(f"Could not parse DATABASE_URL: {e}")
 
-# Create SSL context for Supabase
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
-
-logger.info("Creating database engine with SSL context")
+logger.info("Creating database engine WITHOUT SSL (testing)")
 
 engine = create_async_engine(
     DATABASE_URL,
@@ -31,10 +25,9 @@ engine = create_async_engine(
     pool_recycle=1800,
     future=True,
     connect_args={
-        "ssl": ssl_context,
+        "ssl": None,  # Disable SSL temporarily to test
         "statement_cache_size": 0,
         "prepared_statement_cache_size": 0,
-        "timeout": 30,  # Add connection timeout
     }
 )
 
@@ -48,7 +41,7 @@ async def get_session():
 
 async def init_db():
     from app.models import event, announcement
-    logger.info("Testing database connection...")
+    logger.info("Testing database connection (SSL disabled)...")
     try:
         async with engine.begin() as conn:
             await conn.run_sync(lambda sync_conn: None)
