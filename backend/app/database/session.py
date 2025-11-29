@@ -11,7 +11,7 @@ engine = create_async_engine(
     pool_recycle=1800,
     future=True,
     connect_args={
-        "ssl": "require",
+        "ssl": ssl_context,
         "statement_cache_size": 0,
         "prepared_statement_cache_size": 0  # for asyncpg >= 0.29
     }
