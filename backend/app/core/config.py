@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     HOST: str = os.getenv('HOST','0.0.0.0')
     PORT: int = int(os.getenv('PORT', 4000))
     SECRET_KEY: str = os.getenv('SECRET_KEY')
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 120
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
 settings = Settings()

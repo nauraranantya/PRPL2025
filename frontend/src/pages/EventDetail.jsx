@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react";
+import { Heading } from "../components/typography";
+import { Text } from "../components/ui";
 
 import {
   fetchEvent,
