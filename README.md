@@ -1,24 +1,57 @@
-Village Events Management System
+# Village Event Management Website
 
+A full-stack web application for managing and sharing village community events. It helps admins organize event details, roles, participation, and post announecements, while giving villagers an easy way to browse and access event information.
 
-Backend (FastAPI async SQLAlchemy): ./backend
+🔗 **Live Website:** [https://acara-desa.up.railway.app/](https://acara-desa.up.railway.app/)
 
-Frontend (React): ./frontend
+---
 
+## 🚀 Tech Stack
 
-Quick start (backend):
+### **Frontend**
 
-1. Copy backend/.env.example to backend/.env and set DATABASE_URL and ADMIN_API_KEY
-2. cd backend
-3. pip install -r requirements.txt
-4. uvicorn app.main:app --reload --port 4000
+* React JS (Create React App)
+* TailwindCSS / CSS
 
-Quick start (frontend):
+### **Backend**
 
-1. cd frontend
-2. npm install
-3. npm start
+* FastAPI
+* SQLAlchemy
 
-Notes:
-- Frontend is preconfigured to call the backend at http://localhost:4000/api by default.
-- For production, set REACT_APP_API_BASE to your deployed backend URL.
+### **Database**
+* PostgreSQL
+
+### **Deployment**
+
+* Railway (single project: frontend + backend)
+
+---
+
+## 📦 Run Locally
+
+## Clone repo
+
+```bash
+git clone https://github.com/naurayesh/PRPL2025.git
+cd PRPL2025
+```
+
+---
+
+## ▶️ Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+---
+
+## ⚙️ Backend Setup
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
