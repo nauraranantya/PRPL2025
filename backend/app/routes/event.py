@@ -332,6 +332,3 @@ async def remove_participant(
 
     return {"success": True}
 
-@router.get("", response_model=list[EventOut])
-async def list_events(session: AsyncSession = Depends(get_session)):
-    return await crud.event.list_events(session)
