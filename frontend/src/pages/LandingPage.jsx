@@ -26,8 +26,13 @@ export default function LandingPage() {
         const res = await fetchEvents({ upcoming: true });
 
         if (res.success) {
+          const now = new Date();
+
           const validEvents = res.data
-            .filter((e) => !e.is_cancelled)
+            .filter((e) => {
+              const date = new Date(e.event_date);
+              return !e.is_cancelled && date >= now; 
+            })
             .sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
 
           setUpcoming(validEvents.slice(0, 3));
