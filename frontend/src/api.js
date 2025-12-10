@@ -1,6 +1,11 @@
 import axios from "axios";
 
-export const API_BASE = "http://localhost:8000/api";
+// Use environment variable, fallback to localhost for development
+export const API_BASE = process.env.REACT_APP_API_URL 
+  ? `${process.env.REACT_APP_API_URL}/api`
+  : "http://localhost:8000/api";
+
+console.log("API_BASE:", API_BASE); // Debug log to verify
 
 /* ---------------------------------------------------
    AXIOS INSTANCE

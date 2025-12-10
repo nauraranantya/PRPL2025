@@ -19,9 +19,19 @@ export default function EventList() {
       try {
         const res = await fetchEvents();
         if (res.success) {
-          const sorted = res.data.sort(
-            (a, b) => new Date(a.event_date) - new Date(b.event_date)
-          );
+          const now = new Date();
+
+          const sorted = res.data
+            .filter((e) => {
+              if (!e.event_date) return false;
+              const date = new Date(e.event_date);
+              return !e.is_cancelled && date >= now;
+            })
+            .sort(
+              (a, b) =>
+                new Date(a.event_date) - new Date(b.event_date)
+            );
+
           setEvents(sorted);
           setFiltered(sorted);
         }

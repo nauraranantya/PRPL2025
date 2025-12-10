@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     
     for (const event of eventsList) {
       try {
-        const count = await fetchEventParticipants(eventId).length;
+        const count = await fetchEventParticipants(event.id).length;
         counts[event.id] = count;
       } catch (err) {
         console.error(`Failed to load participants for event ${event.id}:`, err);

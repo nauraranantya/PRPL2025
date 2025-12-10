@@ -43,6 +43,5 @@ class EventOut(BaseModel):
     slots_available: Optional[int] = None
     recurrence_pattern: Optional[str] = None
     media: Optional[list[EventMediaOut]] = None
-    participants: list[ParticipantOut] = []   
 
     model_config = {"from_attributes": True}

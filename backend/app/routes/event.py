@@ -1,5 +1,6 @@
+# app/routes/event.py
 from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Optional
+from typing import Optional, List
 from app.database.session import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.event import EventCreate, EventUpdate, EventOut
@@ -14,10 +15,24 @@ from app.schemas.participant import ParticipantAdminCreate, ParticipantOut
 
 router = APIRouter()
 
+# Helper: re-query event with relationships loaded
+async def load_event_with_relations(session: AsyncSession, event_id: str) -> Optional[Event]:
+    stmt = (
+        select(Event)
+        .where(Event.id == event_id)
+        .options(
+            selectinload(Event.media),
+            selectinload(Event.participants),
+            selectinload(Event.recurrence),
+            selectinload(Event.roles),
+            selectinload(Event.schedules),
+            selectinload(Event.attendances),
+        )
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
 
-# ---------------------------------------------------------
 # CREATE EVENT
-# ---------------------------------------------------------
 @router.post("", response_model=dict)
 async def create_event(
     payload: EventCreate,
@@ -34,13 +49,11 @@ async def create_event(
         payload.slots_available,
         payload.recurrence_pattern
     )
-    return {"success": True, "data": EventOut.from_orm(ev).dict()}
 
+    ev_full = await load_event_with_relations(session, str(ev.id))
+    return {"success": True, "data": EventOut.from_orm(ev_full).dict()}
 
-
-# ---------------------------------------------------------
 # UPDATE EVENT
-# ---------------------------------------------------------
 @router.put("/{event_id}", response_model=dict)
 async def edit_event(
     event_id: str,
@@ -56,6 +69,7 @@ async def edit_event(
     if payload.is_cancelled is not None: updates["is_cancelled"] = payload.is_cancelled
     if payload.requires_registration is not None: updates["requires_registration"] = payload.requires_registration
     if payload.slots_available is not None: updates["slots_available"] = payload.slots_available
+    if payload.recurrence_pattern is not None: updates["recurrence_pattern"] = payload.recurrence_pattern
 
     ev = await crud.event.update_event(session, event_id, updates)
 
@@ -65,33 +79,36 @@ async def edit_event(
             detail={"code": "EVENT_NOT_FOUND", "message": "Event tidak ditemukan"},
         )
 
-    return {"success": True, "data": EventOut.from_orm(ev).dict()}
+    # Re-query with relationships eagerly loaded BEFORE serializing
+    ev_full = await load_event_with_relations(session, event_id)
+    return {"success": True, "data": EventOut.from_orm(ev_full).dict()}
 
-
-
-# ---------------------------------------------------------
 # DELETE EVENT
-# ---------------------------------------------------------
 @router.delete("/{event_id}", response_model=dict)
 async def delete_event(
     event_id: str,
     current_user=Depends(require_admin_user),
     session: AsyncSession = Depends(get_session)
 ):
-    ev = await crud.event.delete_event(session, event_id)
-    if not ev:
+    # Fetch before deleting so Pydantic doesn't try to lazy load after deletion
+    ev_full = await load_event_with_relations(session, event_id)
+    if not ev_full:
         raise HTTPException(
             status_code=404,
             detail={"code": "EVENT_NOT_FOUND", "message": "Event tidak ditemukan"},
         )
 
-    return {"success": True, "data": EventOut.from_orm(ev).dict()}
+    deleted = await crud.event.delete_event(session, event_id)
+    if not deleted:
+        # If your crud.delete_event returns False on failure
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "DELETE_FAILED", "message": "Failed to delete event"},
+        )
 
+    return {"success": True, "data": EventOut.from_orm(ev_full).dict()}
 
-
-# ---------------------------------------------------------
-# LIST EVENTS (LOAD MEDIA)
-# ---------------------------------------------------------
+# LIST EVENTS
 @router.get("", response_model=dict)
 async def list_events(
     q: Optional[str] = Query(None),
@@ -114,25 +131,10 @@ async def list_events(
         "data": [EventOut.from_orm(e).dict() for e in events]
     }
 
-
-
-# ---------------------------------------------------------
-# GET EVENT BY ID (LOAD MEDIA)
-# ---------------------------------------------------------
+# GET EVENT BY ID
 @router.get("/{event_id}", response_model=dict)
 async def get_event(event_id: str, session: AsyncSession = Depends(get_session)):
-    stmt = (
-        select(Event)
-        .options(
-            selectinload(Event.media),
-            selectinload(Event.recurrence),
-            selectinload(Event.participants) 
-        )
-        .where(Event.id == event_id)
-    )
-
-    result = await session.execute(stmt)
-    ev = result.scalar_one_or_none()
+    ev = await load_event_with_relations(session, event_id)
 
     if not ev:
         raise HTTPException(
@@ -142,28 +144,15 @@ async def get_event(event_id: str, session: AsyncSession = Depends(get_session))
 
     return {"success": True, "data": EventOut.from_orm(ev).dict()}
 
-
-
-# ---------------------------------------------------------
 # REGISTER FOR EVENT
-# ---------------------------------------------------------
 @router.post("/{event_id}/register", response_model=dict)
 async def register_for_event(
     event_id: str,
     current_user=Depends(require_user),
     session: AsyncSession = Depends(get_session)
 ):
-
     # Load event with participants count and media (safe)
-    stmt = (
-        select(Event)
-        .where(Event.id == event_id)
-        .options(selectinload(Event.media))
-        .options(selectinload(Event.participants))
-    )
-
-    result = await session.execute(stmt)
-    event = result.scalar_one_or_none()
+    event = await load_event_with_relations(session, event_id)
 
     if not event:
         raise HTTPException(404, "Event not found")
@@ -194,6 +183,8 @@ async def register_for_event(
     await session.commit()
     await session.refresh(p)
 
+    # Re-load event to get updated participants safely if needed
+    event = await load_event_with_relations(session, event_id)
     remaining = (
         event.slots_available - len(event.participants)
         if event.slots_available is not None else None
@@ -205,6 +196,7 @@ async def register_for_event(
         "slots_remaining": remaining
     }
 
+# ADMIN – register a participant by admin (unchanged logic but ensure returns are safe)
 @router.post("/{event_id}/register-admin", response_model=ParticipantOut)
 async def register_participant_by_admin(
     event_id: str,
@@ -212,46 +204,38 @@ async def register_participant_by_admin(
     current_user = Depends(require_admin_user),
     session: AsyncSession = Depends(get_session)
 ):
-    """Admin endpoint to register a new user and add them to an event"""
     from app import crud as user_crud
     
-    # Validate: name is required, and at least email or phone
+    # Validation
     if not payload.full_name or not payload.full_name.strip():
         raise HTTPException(status_code=400, detail="Nama wajib diisi")
-    
     if not payload.email and not payload.phone:
         raise HTTPException(status_code=400, detail="Email atau No. Telepon wajib diisi")
     
-    # Check if user exists
     user = None
     if payload.email:
         user = await user_crud.user.get_by_email(session, payload.email)
     if not user and payload.phone:
         user = await user_crud.user.get_by_phone(session, payload.phone)
     
-    # Create user if doesn't exist
     if not user:
         if payload.email:
-            # Create with email
             user = await user_crud.user.create_user_with_email(
                 session, 
                 email=payload.email,
-                password="defaultpassword123",  # Or generate random password
+                password="defaultpassword123",
                 full_name=payload.full_name
             )
         else:
-            # Create with phone
             user = await user_crud.user.create_user_with_phone(
                 session,
                 phone=payload.phone,
                 password="defaultpassword123"
             )
-            # Update full_name if needed
             user.full_name = payload.full_name
             await session.commit()
             await session.refresh(user)
     
-    # Register user for event
     participant_data = {
         "event_id": event_id,
         "user_id": str(user.id),
@@ -260,28 +244,18 @@ async def register_participant_by_admin(
     
     return await crud.participation.create_participant(session, participant_data)
 
-# ---------------------------------------------------------
-# UNREGISTER FROM EVENT (USER)
-# ---------------------------------------------------------
+# UNREGISTER (USER)
 @router.delete("/{event_id}/unregister", response_model=dict)
 async def unregister_from_event(
     event_id: str,
     current_user = Depends(require_user),
     session: AsyncSession = Depends(get_session)
 ):
-    # Is event valid?
-    stmt = (
-        select(Event)
-        .where(Event.id == event_id)
-        .options(selectinload(Event.participants))
-    )
-    result = await session.execute(stmt)
-    event = result.scalar_one_or_none()
+    event = await load_event_with_relations(session, event_id)
 
     if not event:
         raise HTTPException(404, "Event not found")
 
-    # Find participant row
     q = await session.execute(
         select(Participant).where(
             Participant.event_id == event_id,
@@ -291,13 +265,11 @@ async def unregister_from_event(
     p = q.scalars().first()
 
     if not p:
-        # Idempotent → unregistering twice is not an error
         return {
             "success": True,
             "message": "You were not registered for this event."
         }
 
-    # Delete participant entry
     await session.delete(p)
     await session.commit()
 
@@ -306,9 +278,7 @@ async def unregister_from_event(
         "message": "Successfully unregistered from event."
     }
 
-# ---------------------------------------------------------
 # ADMIN – REMOVE PARTICIPANT
-# ---------------------------------------------------------
 @router.delete("/{event_id}/participants/{user_id}", response_model=dict)
 async def remove_participant(
     event_id: str,
@@ -331,7 +301,3 @@ async def remove_participant(
     await session.commit()
 
     return {"success": True}
-
-@router.get("", response_model=list[EventOut])
-async def list_events(session: AsyncSession = Depends(get_session)):
-    return await crud.event.list_events(session)

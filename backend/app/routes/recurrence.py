@@ -47,16 +47,26 @@ async def list_recurrences(
     event_id: Optional[UUID] = Query(None),
     session: AsyncSession = Depends(get_session)
 ):
+
+    # If filtered by event ID
     if event_id:
-        rec = await crud.get_by_event(session, str(event_id))
-        return {
-            "success": True,
-            "data": [] if not rec else [RecurrenceOut.from_orm(rec)]
-        }
+        recs = await crud.get_by_event(session, str(event_id))
+
+        # Normalize to list
+        if not recs:
+            return {"success": True, "data": []}
+
+        # If single item returned, make it a list
+        if not isinstance(recs, (list, tuple)):
+            recs = [recs]
+
+        data = [RecurrenceOut.model_validate(r) for r in recs]
+        return {"success": True, "data": data}
 
     # Otherwise return ALL recurrences
     rows = await crud.list_recurrences(session)
-    return {"success": True, "data": [RecurrenceOut.from_orm(r) for r in rows]}
+    data = [RecurrenceOut.model_validate(r) for r in rows]
+    return {"success": True, "data": data}
 
 
 # ------------------------------------------------------

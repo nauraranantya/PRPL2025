@@ -6,7 +6,7 @@ import { createEvent, api } from "../../../api";
 export default function EventCreation() {
   const navigate = useNavigate();
 
-  const [bannerFiles, setBannerFiles] = useState(null);
+  const [bannerFiles, setBannerFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   // Form states
@@ -61,14 +61,19 @@ export default function EventCreation() {
           const form = new FormData();
           form.append("file", f);
 
-          // use api (axios instance) directly so you can supply onUploadProgress
-          await api.post(`/events/${eventId}/media`, form, {
-            headers: { "Content-Type": "multipart/form-data" },
-            onUploadProgress: (progressEvent) => {
-              const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              setUploadProgress(percent);
-            },
-          });
+          await api.post(
+            `/media/${eventId}`,
+            form,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              onUploadProgress: (progressEvent) => {
+                const percent = Math.round(
+                  (progressEvent.loaded * 100) / progressEvent.total
+                );
+                setUploadProgress(percent);
+              },
+            }
+          );
           setUploadProgress(0);
         }
       }

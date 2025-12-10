@@ -10,6 +10,7 @@ import {
 } from "../api";
 
 import { Container, Section } from "../components/layout";
+import { Heading, Text } from "../components/ui";
 
 export default function EventDetail({ user }) {
   const { eventId } = useParams();
