@@ -17,43 +17,58 @@ try:
 except Exception as e:
     logger.warning(f"Could not parse DATABASE_URL: {e}")
 
-# Check if using pooler (port 6543 = transaction mode, no prepared statements needed)
-is_pooler = "pooler.supabase.com" in DATABASE_URL
-logger.info(f"Connection pooler detected: {is_pooler}")
-
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
+
+    # Keeps connections healthy
     pool_pre_ping=True,
-    pool_recycle=1800,
-    pool_size=5,
-    max_overflow=10,
-    future=True,
+
+    # Recycles stale PG connections (Supabase resets connections every 1–2 hours)
+    pool_recycle=1800,  # 30 minutes
+
+    pool_size=10,       
+    max_overflow=20,
+
     connect_args={
-        "statement_cache_size": 100,
-        "prepared_statement_cache_size": 0,  
+        "statement_cache_size": 500,
+        "prepared_statement_cache_size": 100,
+
         "server_settings": {
-            "application_name": "village_events"
-        }
-    }
+            "application_name": "village_events_api",
+            "idle_in_transaction_session_timeout": "30000",
+        },
+    },
+    future=True,
 )
+
+# =============================================
+# Session Factory
+# =============================================
 
 AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
 )
 
+# Dependency for FastAPI
 async def get_session():
     async with AsyncSessionLocal() as session:
         yield session
 
+
+# =============================================
+# DB Connection Test (on startup)
+# =============================================
 async def init_db():
-    from app.models import event, announcement
-    logger.info("Testing database connection via pooler...")
+    logger.info("[DB] Testing connection...")
+
     try:
         async with engine.begin() as conn:
-            await conn.run_sync(lambda sync_conn: None)
-        logger.info("Database connection successful!")
+            await conn.run_sync(lambda _: None)
+        logger.info("[DB] Database connection OK.")
     except Exception as e:
-        logger.error(f"Database connection failed: {e}")
-        logger.error(f"Make sure you're using Supabase connection pooler URL")
+        logger.error("[DB] Connection FAILED")
+        logger.error(str(e))
         raise
