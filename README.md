@@ -2,11 +2,11 @@
 
 A full-stack web application for managing and sharing village community events. It helps admins organize event details, roles, participation, and post announecements, while giving villagers an easy way to browse and access event information.
 
-🔗 **Live Website:** [https://acara-desa.up.railway.app/](https://acara-desa.up.railway.app/)
+🔗 **Live Website:** [https://acara-desa.fly.dev/](https://acara-desa.fly.dev/)
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 ### **Frontend**
 
@@ -27,7 +27,7 @@ A full-stack web application for managing and sharing village community events. 
 
 ---
 
-## 📦 Run Locally
+## Run Locally
 
 ## Clone repo
 
@@ -38,7 +38,7 @@ cd PRPL2025
 
 ---
 
-## ▶️ Frontend Setup
+## Frontend Setup
 
 ```bash
 cd frontend
@@ -48,7 +48,7 @@ npm start
 
 ---
 
-## ⚙️ Backend Setup
+## Backend Setup
 
 ```bash
 cd backend

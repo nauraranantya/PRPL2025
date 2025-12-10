@@ -8,7 +8,7 @@ const QUEUE_CACHE = `bg-queue-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline.html";
 const APP_SHELL = "/index.html";
 
-const API_HOST = "https://generous-emotion-production.up.railway.app";
+const API_HOST = "https://prpl2025.fly.dev";
 
 /* ===========================
    STATIC ASSETS TO PRECACHE
