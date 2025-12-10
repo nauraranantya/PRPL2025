@@ -27,9 +27,9 @@ class Event(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now(), nullable=False)
 
     # Relationships
-    schedules = relationship("Schedule", back_populates="event", cascade="all, delete")
-    participants = relationship("Participant", back_populates="event", cascade="all, delete")
-    roles = relationship("Role", back_populates="event", cascade="all, delete")
+    schedules = relationship("Schedule", back_populates="event", cascade="all, delete", lazy="selectin")
+    participants = relationship("Participant", back_populates="event", cascade="all, delete", lazy="selectin")
+    roles = relationship("Role", back_populates="event", cascade="all, delete", lazy="selectin")
     media = relationship("EventMedia", back_populates="event", lazy="selectin", cascade="all, delete")
     recurrence = relationship("Recurrence", back_populates="event", uselist=False, lazy="selectin", cascade="all, delete")
-    attendances = relationship("Attendance", back_populates="event", cascade="all, delete")
+    attendances = relationship("Attendance", back_populates="event", cascade="all, delete", lazy="selectin")

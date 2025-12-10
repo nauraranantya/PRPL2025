@@ -12,6 +12,17 @@ from app.models.event import Event
 from app.models.participant import Participant
 from app.schemas.participant import ParticipantAdminCreate, ParticipantOut
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
+from uuid import UUID
+
+from app.database.session import get_session
+from app.models.event import Event
+from app.models.participant import Participant
+from app.models.role import Role
+
 router = APIRouter()
 
 
@@ -77,6 +88,18 @@ async def edit_event(
             status_code=404,
             detail={"code": "EVENT_NOT_FOUND", "message": "Event tidak ditemukan"},
         )
+    
+    stmt = (
+        select(Event)
+        .where(Event.id == event_id)
+        .options(
+            selectinload(Event.media),
+            selectinload(Event.participants),
+            selectinload(Event.recurrence),
+        )
+    )
+    result = await session.execute(stmt)
+    ev_full = result.scalar_one()
 
     return {"success": True, "data": EventOut.from_orm(ev).dict()}
 
@@ -107,53 +130,169 @@ async def delete_event(
 # ---------------------------------------------------------
 @router.get("", response_model=dict)
 async def list_events(
-    q: Optional[str] = Query(None),
+    q: Optional[str] = Query(None, description="Search events by title or description"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
     upcoming: Optional[bool] = Query(False),
     session: AsyncSession = Depends(get_session)
 ):
+
+    offset = (page - 1) * limit
+
+    # --- BASE QUERY with participant count ---
     stmt = (
-        select(Event)
-        .options(
-            selectinload(Event.media),
-            selectinload(Event.participants)
+        select(
+            Event,
+            func.count(Participant.id).label("participant_count")
         )
+        .join(Participant, Participant.event_id == Event.id, isouter=True)
+        .group_by(Event.id)
         .order_by(Event.event_date.asc())
+        .limit(limit)
+        .offset(offset)
+        .options(selectinload(Event.media)) 
     )
 
-    events = (await session.execute(stmt)).scalars().all()
+    # --- FILTER: search ---
+    if q:
+        stmt = stmt.where(
+            (Event.title.ilike(f"%{q}%")) |
+            (Event.description.ilike(f"%{q}%"))
+        )
+
+    # --- FILTER: upcoming events only ---
+    if upcoming:
+        from datetime import datetime
+        stmt = stmt.where(Event.event_date >= datetime.utcnow())
+
+    result = await session.execute(stmt)
+    rows = result.all() 
+
+    # --- Build optimized response ---
+    events = []
+    for ev, count in rows:
+
+        # Frontend expects: event.media[0].file_url
+        media_list = []
+        if ev.media:
+            media_list = [{"file_url": ev.media[0].file_url}]
+
+        events.append({
+            "id": ev.id,
+            "title": ev.title,
+            "description": ev.description,
+            "location": ev.location,
+            "event_date": ev.event_date,
+            "is_cancelled": ev.is_cancelled,
+            "participant_count": count,
+            "media": media_list,
+        })
 
     return {
         "success": True,
-        "data": [EventOut.from_orm(e).dict() for e in events]
+        "data": events,
+        "page": page,
+        "limit": limit,
+        "count": len(events)
     }
-
-
 
 # ---------------------------------------------------------
 # GET EVENT BY ID (LOAD MEDIA)
 # ---------------------------------------------------------
 @router.get("/{event_id}", response_model=dict)
-async def get_event(event_id: str, session: AsyncSession = Depends(get_session)):
+async def get_event_detail(
+    event_id: UUID,
+    include_participants: bool = Query(False),
+    include_roles: bool = Query(False),
+    session: AsyncSession = Depends(get_session),
+):
+
+    # ---------------------------------------------
+    # BASIC EVENT + participant_count
+    # ---------------------------------------------
     stmt = (
-        select(Event)
-        .options(
-            selectinload(Event.media),
-            selectinload(Event.recurrence),
-            selectinload(Event.participants) 
+        select(
+            Event,
+            func.count(Participant.id).label("participant_count")
         )
+        .join(Participant, Participant.event_id == Event.id, isouter=True)
         .where(Event.id == event_id)
+        .group_by(Event.id)
+        .options(selectinload(Event.media))  # preload only media
     )
 
     result = await session.execute(stmt)
-    ev = result.scalar_one_or_none()
+    row = result.first()
 
-    if not ev:
-        raise HTTPException(
-            status_code=404,
-            detail={"code": "EVENT_NOT_FOUND", "message": "Event tidak ditemukan"},
+    if not row:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    event, participant_count = row
+
+    # Convert media to lightweight list
+    media_list = [{"file_url": m.file_url} for m in event.media] if event.media else []
+
+    # Base response object
+    response = {
+        "id": event.id,
+        "title": event.title,
+        "description": event.description,
+        "location": event.location,
+        "event_date": event.event_date,
+        "is_cancelled": event.is_cancelled,
+        "requires_registration": event.requires_registration,
+        "slots_available": event.slots_available,
+        "participant_count": participant_count,
+        "media": media_list,
+    }
+
+    # ---------------------------------------------
+    # OPTIONAL: Load participants
+    # ---------------------------------------------
+    if include_participants:
+        stmt_p = (
+            select(Participant)
+            .where(Participant.event_id == event.id)
+            .options(selectinload(Participant.user))
         )
+        res_p = await session.execute(stmt_p)
+        participants = res_p.scalars().all()
 
-    return {"success": True, "data": EventOut.from_orm(ev).dict()}
+        response["participants"] = [
+            {
+                "id": p.id,
+                "user_id": p.user_id,
+                "role_id": p.role_id,
+                "registered_at": p.registered_at,
+                "user_full_name": p.user.full_name if p.user else None,
+                "user_email": p.user.email if p.user else None,
+                "user_phone": p.user.phone if p.user else None,
+            }
+            for p in participants
+        ]
+    else:
+        response["participants"] = None  # keeps frontend consistent
+
+    # ---------------------------------------------
+    # OPTIONAL: Load roles
+    # ---------------------------------------------
+    if include_roles:
+        stmt_r = select(Role).where(Role.event_id == event.id)
+        res_r = await session.execute(stmt_r)
+        roles = res_r.scalars().all()
+
+        response["roles"] = [
+            {
+                "id": r.id,
+                "name": r.name,
+                "description": r.description,
+            }
+            for r in roles
+        ]
+    else:
+        response["roles"] = None
+
+    return {"success": True, "data": response}
 
 
 
