@@ -30,10 +30,10 @@ engine = create_async_engine(
     max_overflow=10,
     future=True,
     connect_args={
-        "statement_cache_size": 0,
-        "prepared_statement_cache_size": 0,
+        "statement_cache_size": 100,
+        "prepared_statement_cache_size": 0,  
         "server_settings": {
-            "application_name": "village_events_railway"
+            "application_name": "village_events"
         }
     }
 )
