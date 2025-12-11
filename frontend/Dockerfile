@@ -18,11 +18,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --omit=dev
 
-# Copy build output
-COPY --from=build /app/build ./build
+# Copy build output from builder stage
+COPY --from=builder /app/build ./build
 COPY server.js .
 
-# Fly will pass PORT env
+# Fly sets PORT dynamically
 ENV PORT=3000
 
 EXPOSE 3000
