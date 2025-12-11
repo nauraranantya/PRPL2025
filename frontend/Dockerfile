@@ -1,10 +1,12 @@
 # --- Build Stage ---
-FROM node:18 AS build
+FROM node:18 AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install
+ARG REACT_APP_API_BASE
+ENV REACT_APP_API_BASE=$REACT_APP_API_BASE
 
+COPY package*.json ./
+RUN npm install
 COPY . .
 RUN npm run build
 
