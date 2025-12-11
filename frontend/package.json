@@ -13,9 +13,8 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "serve": "node server.js"
+    "start": "node server.js",
+    "build": "react-scripts build"
   },
   "browserslist": {
     "production": [
