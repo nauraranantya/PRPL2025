@@ -23,7 +23,7 @@ A full-stack web application for managing and sharing village community events. 
 
 ### **Deployment**
 
-* Railway (single project: frontend + backend)
+* Fly.io
 
 ---
 
